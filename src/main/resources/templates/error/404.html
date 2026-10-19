@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Not found')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+<main id="main" class="section">
+    <div class="container" style="max-width:640px">
+        <div class="pebble pebble-pad text-center auth-card">
+            <p class="eyebrow mb-2">404</p>
+            <h1 class="h2">This stop isn't on our map</h1>
+            <p class="text-muted-soft" th:text="${message != null ? message : 'The page you asked for does not exist or has moved.'}">Not found</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap mt-3">
+                <a class="btn btn-moss" th:href="@{/}">Back to the start</a>
+                <a class="btn btn-soft" th:href="@{/stations}">Browse stations</a>
+            </div>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

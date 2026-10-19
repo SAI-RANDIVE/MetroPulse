@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${line.name})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div class="container">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <a th:each="l : ${allLines}" th:href="@{/lines/{c}(c=${l.code})}" class="btn btn-sm"
+               th:classappend="${l.code == line.code} ? 'btn-moss' : 'btn-soft'" th:text="'Line ' + ${l.code}">Line</a>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="pebble pebble-pad line-card" th:style="|--line-color:${line.color}|">
+                    <span th:replace="~{fragments/components :: chip(${line.code}, ${line.color}, ${line.textColor})}"></span>
+                    <h1 class="h2 mt-3 mb-2" th:text="${line.name}">Line</h1>
+                    <p class="text-muted-soft mb-3" th:text="${line.operatorName}">Operator</p>
+                    <div class="d-flex flex-wrap">
+                        <div class="metric"><span class="v" th:text="${line.stops.size()}">12</span><span class="k">Stops</span></div>
+                        <div class="metric"><span class="v" th:text="${line.status.name() == 'OPERATIONAL'} ? 'Running' : ${line.status}">Running</span><span class="k">Status</span></div>
+                    </div>
+                    <p class="meta mt-4 mb-0">
+                        Station order follows the operator's published list. The diagram is schematic - spacing does not
+                        reflect distance. Ringed stops are terminals or interchanges.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="pebble pebble-pad">
+                    <h2 class="h3 mb-3">Stops in order</h2>
+                    <ol class="thread" th:style="|--line-color:${line.color}|">
+                        <li th:each="stop, it : ${line.stops}" class="thread-stop"
+                            th:classappend="${(it.first or it.last) ? 'terminal ' : ''} + ${stop.isInterchange() ? 'interchange ' : ''} + ${!stop.operational ? 'non-stop' : ''}">
+                            <span class="dot" aria-hidden="true"></span>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="seq" th:text="${stop.sequenceNo}">1</span>
+                                <a class="stop-name" th:href="@{/stations/{id}(id=${stop.stationId})}" th:text="${stop.stationName}">Stop</a>
+                                <th:block th:each="o : ${stop.otherLines}"><a th:replace="~{fragments/components :: chipLink(${o.code}, ${o.color}, ${o.textColor})}"></a></th:block>
+                                <span th:if="${!stop.operational}" class="meta">trains not stopping</span>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

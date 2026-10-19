@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Audit log')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div class="container">
+        <p class="eyebrow mb-1">Accountability</p>
+        <h1 class="h2 mb-3">Audit log</h1>
+        <nav th:replace="~{fragments/components :: adminTabs('audit')}"></nav>
+
+        <div class="pebble pebble-pad">
+            <p class="meta">Administrative actions with their actor and time. Passwords, tokens and secrets are never recorded.</p>
+            <th:block th:if="${page.isEmpty()}"><div th:replace="~{fragments/components :: empty('Nothing recorded yet.')}"></div></th:block>
+            <div class="table-responsive" th:if="${!page.isEmpty()}">
+                <table class="table table-soft">
+                    <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Entity</th><th>Details</th></tr></thead>
+                    <tbody>
+                    <tr th:each="a : ${page.content}">
+                        <td class="meta text-nowrap" th:text="${@fmt.dateTime(a.createdAt)}">t</td>
+                        <td class="small" th:text="${a.actorEmail}">actor</td>
+                        <td><code class="small" th:text="${a.action}">A</code></td>
+                        <td class="small" th:text="${a.entityType} + (${a.entityId != null} ? ' #' + ${a.entityId} : '')">E</td>
+                        <td class="small" th:text="${a.details}">d</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div th:replace="~{fragments/components :: pagination(${page}, @{/admin/audit})}"></div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

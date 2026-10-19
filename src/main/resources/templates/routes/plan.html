@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Plan a journey')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <p class="eyebrow mb-1">Journey planner</p>
+                <h1 class="mb-3">Where are you headed?</h1>
+                <p class="lead-soft mb-4">Pick two stations on Lines 1, 2A or 7. We compare up to three routes - the fastest,
+                    the one with fewer reported crowds, and the one with fewer changes - and say plainly when they are the same.</p>
+                <div th:replace="~{fragments/planner :: form(${form}, ${stations}, ${preferences})}"></div>
+            </div>
+            <aside class="col-lg-4">
+                <div class="pebble-soft p-4 h-100">
+                    <h2 class="h3">What the options mean</h2>
+                    <dl class="mb-0">
+                        <dt class="mt-3">Fastest</dt>
+                        <dd class="text-muted-soft">Lowest estimated time: about 2 minutes between stops plus estimated interchange walks and any verified delays.</dd>
+                        <dt>Less crowded</dt>
+                        <dd class="text-muted-soft">Adds a penalty for stops with a current crowd report (moderate +2, high +6, very high +12 min). No report means no penalty - and we tell you crowding is unknown.</dd>
+                        <dt>Fewer transfers</dt>
+                        <dd class="text-muted-soft mb-0">Counts every interchange as 20 extra minutes, so it only stays on one line when that is reasonable.</dd>
+                    </dl>
+                </div>
+            </aside>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Station facilities')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="container">
+        <p class="eyebrow mb-1">Accessibility &amp; amenities</p>
+        <h1 class="h2 mb-3">Station facilities</h1>
+        <nav th:replace="~{fragments/components :: adminTabs('facilities')}"></nav>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <form class="pebble pebble-pad filter-bar mb-3" th:action="@{/admin/facilities}" method="get">
+                    <div class="flex-grow-1">
+                        <label class="form-label small fw-semibold" for="f-station">Station</label>
+                        <select id="f-station" name="stationId" class="form-select">
+                            <option value="">All stations</option>
+                            <option th:each="s : ${stations}" th:value="${s.id}" th:text="${s.name}" th:selected="${stationId != null and s.id == stationId}">S</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label small fw-semibold" for="f-type">Type</label>
+                        <select id="f-type" name="type" class="form-select">
+                            <option value="">Any</option>
+                            <option th:each="t : ${types}" th:value="${t}" th:text="${t.label}" th:selected="${t == type}">T</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-moss" type="submit">Filter</button>
+                    <a class="btn btn-soft" th:href="@{/admin/facilities}">Clear</a>
+                </form>
+
+                <th:block th:if="${page.isEmpty()}"><div th:replace="~{fragments/components :: empty('No facilities recorded for this filter.')}"></div></th:block>
+                <div class="d-grid gap-3">
+                    <form class="pebble pebble-pad" th:each="f : ${page.content}" th:action="@{/admin/facilities/{id}(id=${f.id})}" method="post">
+                        <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                            <div>
+                                <strong th:text="${f.type.label}">Lift</strong> at
+                                <a th:href="@{/stations/{id}(id=${f.stationId})}" th:text="${f.stationName}">Station</a>
+                                <span th:if="${f.demo}" class="demo-tag ms-1">Demo</span>
+                            </div>
+                            <span class="meta" th:text="${f.lastVerifiedAt != null} ? 'Verified ' + ${@fmt.dateTime(f.lastVerifiedAt)} : 'Never verified'">v</span>
+                        </div>
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label small" th:for="'st-' + ${f.id}">Status</label>
+                                <select class="form-select" name="status" th:id="'st-' + ${f.id}">
+                                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label}" th:selected="${s == f.status}">S</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small" th:for="'d-' + ${f.id}">Description</label>
+                                <input class="form-control" name="description" th:id="'d-' + ${f.id}" th:value="${f.description}" maxlength="300">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small" th:for="'s-' + ${f.id}">Source</label>
+                                <input class="form-control" name="source" th:id="'s-' + ${f.id}" th:value="${f.source}" maxlength="200">
+                            </div>
+                            <div class="col-md-2 d-grid">
+                                <button class="btn btn-moss btn-sm" type="submit">Verify &amp; save</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div th:replace="~{fragments/components :: pagination(${page}, @{/admin/facilities(stationId=${stationId},type=${type})})}"></div>
+            </div>
+
+            <aside class="col-lg-4">
+                <form class="pebble pebble-pad position-sticky" style="top:6.5rem" th:action="@{/admin/facilities}" th:object="${form}" method="post" novalidate>
+                    <h2 class="h3">Add a facility</h2>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="stationId">Station</label>
+                        <select class="form-select" th:field="*{stationId}" th:errorclass="is-invalid">
+                            <option value="">Choose a station</option>
+                            <option th:each="s : ${stations}" th:value="${s.id}" th:text="${s.name}">S</option>
+                        </select>
+                        <div class="field-error mt-1" th:errors="*{stationId}">e</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="facilityType">Type</label>
+                        <select class="form-select" th:field="*{facilityType}" th:errorclass="is-invalid">
+                            <option value="">Choose a type</option>
+                            <option th:each="t : ${types}" th:value="${t}" th:text="${t.label}">T</option>
+                        </select>
+                        <div class="field-error mt-1" th:errors="*{facilityType}">e</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="status">Status</label>
+                        <select class="form-select" th:field="*{status}">
+                            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label}">S</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="description">Description</label>
+                        <input class="form-control" th:field="*{description}" maxlength="300">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="source">Information source</label>
+                        <input class="form-control" th:field="*{source}" maxlength="200" placeholder="e.g. Site visit, 19 Oct 2026">
+                    </div>
+                    <button type="submit" class="btn btn-moss w-100">Add facility</button>
+                </form>
+            </aside>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

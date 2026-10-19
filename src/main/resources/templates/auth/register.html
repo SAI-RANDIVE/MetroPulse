@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Create an account')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main">
+    <div class="container">
+        <div class="auth-wrap">
+            <div class="pebble auth-card pebble-pad">
+                <p class="eyebrow mb-1">Join the community</p>
+                <h1 class="h2 mb-2">Create a commuter account</h1>
+                <p class="text-muted-soft mb-4">An account lets you share crowd reports. Browsing and route planning stay open to everyone.</p>
+
+                <form th:action="@{/register}" th:object="${form}" method="post" data-loading novalidate>
+                    <div class="mb-3">
+                        <label for="displayName" class="form-label fw-semibold">Display name</label>
+                        <input type="text" class="form-control" th:field="*{displayName}" th:errorclass="is-invalid" autocomplete="nickname" maxlength="80">
+                        <div class="field-error mt-1" th:errors="*{displayName}">error</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-semibold">Email</label>
+                        <input type="email" class="form-control" th:field="*{email}" th:errorclass="is-invalid" autocomplete="email" maxlength="160">
+                        <div class="field-error mt-1" th:errors="*{email}">error</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-semibold">Password</label>
+                        <input type="password" class="form-control" th:field="*{password}" th:errorclass="is-invalid" autocomplete="new-password" maxlength="72">
+                        <div class="form-text">At least 8 characters.</div>
+                        <div class="field-error mt-1" th:errors="*{password}">error</div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="confirmPassword" class="form-label fw-semibold">Repeat password</label>
+                        <input type="password" class="form-control" th:field="*{confirmPassword}" th:errorclass="is-invalid" autocomplete="new-password" maxlength="72">
+                        <div class="field-error mt-1" th:errors="*{confirmPassword}">error</div>
+                    </div>
+                    <button type="submit" class="btn btn-moss w-100">Create account</button>
+                </form>
+                <p class="meta mt-4 mb-0 text-center">Already registered? <a th:href="@{/login}">Sign in</a></p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

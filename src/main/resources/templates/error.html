@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Something went wrong')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+<main id="main" class="section">
+    <div class="container" style="max-width:640px">
+        <div class="pebble pebble-pad text-center auth-card">
+            <p class="eyebrow mb-2" th:text="${status != null ? status : 'Error'}">500</p>
+            <h1 class="h2">A small delay on our side</h1>
+            <p class="text-muted-soft" th:text="${message != null and !#strings.isEmpty(message) ? message : 'Something went wrong while loading this page. Please try again.'}">Error</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap mt-3">
+                <a class="btn btn-moss" th:href="@{/}">Back to the start</a>
+            </div>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

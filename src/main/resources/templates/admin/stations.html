@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Stations and lines')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+            <div>
+                <p class="eyebrow mb-1">Network data</p>
+                <h1 class="h2 mb-0">Stations, lines &amp; connections</h1>
+            </div>
+            <a class="btn btn-moss" th:href="@{/admin/stations/new}">＋ New station</a>
+        </div>
+        <nav th:replace="~{fragments/components :: adminTabs('network')}"></nav>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4" th:each="line : ${lines}">
+                <a class="pebble pebble-pad line-card lift d-block text-decoration-none text-body" th:href="@{/admin/lines/{id}(id=${line.id})}"
+                   th:style="|--line-color:${line.color}|">
+                    <span th:replace="~{fragments/components :: chip(${line.code}, ${line.color}, ${line.textColor})}"></span>
+                    <div class="fw-semibold mt-2" th:text="${line.stops.size()} + ' stops · manage mapping and travel times →'">manage</div>
+                </a>
+            </div>
+        </div>
+
+        <form class="search-pill mb-3" th:action="@{/admin/stations}" method="get" role="search">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <label for="q" class="visually-hidden">Search stations</label>
+            <input id="q" name="q" type="search" class="form-control" th:value="${q}" placeholder="Search stations">
+        </form>
+
+        <div class="pebble pebble-pad">
+            <div class="table-responsive">
+                <table class="table table-soft">
+                    <thead><tr><th>Code</th><th>Name</th><th>Area</th><th>Lines</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                    <tr th:each="s : ${stations}">
+                        <td class="meta"><code th:text="${s.code}">CODE</code></td>
+                        <td><a th:href="@{/stations/{id}(id=${s.id})}" th:text="${s.name}">Name</a></td>
+                        <td class="meta" th:text="${s.area}">area</td>
+                        <td><th:block th:each="l : ${s.lines}"><span th:replace="~{fragments/components :: chip(${l.code}, ${l.color}, ${l.textColor})}"></span> </th:block>
+                            <span th:if="${s.lines.isEmpty()}" class="meta">Not on a line</span></td>
+                        <td><span class="pill no-dot" th:classappend="${s.status.name() == 'OPEN'} ? 'status-ACTIVE' : 'status-REJECTED'" th:text="${s.status}">OPEN</span></td>
+                        <td class="text-end"><a class="btn btn-soft btn-sm" th:href="@{/admin/stations/{id}/edit(id=${s.id})}">Edit</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

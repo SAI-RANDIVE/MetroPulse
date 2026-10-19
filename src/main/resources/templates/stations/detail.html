@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${detail.station.name})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3" th:with="st=${detail.station}, status=${detail.status}">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="container">
+        <a th:href="@{/stations}" class="btn btn-soft btn-sm mb-3">← All stations</a>
+
+        <section class="pebble station-hero pebble-pad mb-4">
+            <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+                <div>
+                    <p class="eyebrow mb-1" th:text="${st.area}">Area</p>
+                    <h1 class="mb-2" th:text="${st.name}">Station</h1>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <th:block th:each="l : ${st.lines}"><a th:replace="~{fragments/components :: chipLink(${l.code}, ${l.color}, ${l.textColor})}"></a></th:block>
+                        <span th:if="${st.status.name() == 'CLOSED'}" class="pill crowd-very-high no-dot">Station closed</span>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-moss" th:href="@{/plan(from=${st.id})}">Plan from here</a>
+                    <a class="btn btn-soft" th:href="@{/plan(to=${st.id})}">Plan to here</a>
+                    <a class="btn btn-soft" th:href="@{/reports/new(stationId=${st.id})}">Report crowding</a>
+                </div>
+            </div>
+        </section>
+
+        <div class="row g-4">
+            <div class="col-lg-7 d-grid gap-4 align-content-start">
+                <!-- crowding -->
+                <section class="pebble pebble-pad" aria-labelledby="crowd-h">
+                    <div class="d-flex justify-content-between align-items-baseline mb-2">
+                        <h2 id="crowd-h" class="h3 mb-0">Crowding now</h2>
+                        <span class="meta">Reports count for 15 minutes</span>
+                    </div>
+                    <div class="facility-row" th:each="c : ${status.crowd}">
+                        <div class="d-flex align-items-center gap-2">
+                            <span th:replace="~{fragments/components :: chip(${c.line.code}, ${c.line.color}, ${c.line.textColor})}"></span>
+                            <span th:replace="~{fragments/components :: crowdStatus(${c})}"></span>
+                        </div>
+                        <span class="meta text-end" th:if="${c.reportedAt != null}">
+                            reported <span th:text="${@fmt.relative(c.reportedAt)}">2 min ago</span>
+                            <span th:if="${c.state.name() != 'STALE'}" class="d-block" th:text="'counts until ' + ${@fmt.time(c.expiresAt)}">until</span>
+                        </span>
+                    </div>
+                    <p class="meta mt-3 mb-0">“Verified” means a moderator checked the report. “User reported” is a commuter report awaiting review.
+                        No report never means the station is quiet.</p>
+                </section>
+
+                <!-- lines and neighbours -->
+                <section class="pebble pebble-pad" aria-labelledby="lines-h">
+                    <h2 id="lines-h" class="h3">On the network</h2>
+                    <div class="facility-row" th:each="m : ${detail.memberships}">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <a th:replace="~{fragments/components :: chipLink(${m.line.code}, ${m.line.color}, ${m.line.textColor})}"></a>
+                            <span class="neighbour">
+                                <th:block th:if="${m.previous != null}">← <a th:href="@{/stations/{id}(id=${m.previous.id})}" th:text="${m.previous.name}">prev</a></th:block>
+                                <span th:if="${m.previous == null}" class="text-muted-soft">Terminus</span>
+                                <span class="mx-1 text-muted-soft">·</span>
+                                <th:block th:if="${m.next != null}"><a th:href="@{/stations/{id}(id=${m.next.id})}" th:text="${m.next.name}">next</a> →</th:block>
+                                <span th:if="${m.next == null}" class="text-muted-soft">Terminus</span>
+                            </span>
+                        </div>
+                        <span class="meta" th:text="${m.operational} ? 'Stop ' + ${m.sequenceNo} : 'Trains not stopping'">Stop 4</span>
+                    </div>
+                    <th:block th:if="${!detail.interchanges.isEmpty()}">
+                        <h3 class="h6 eyebrow mt-4 mb-2">Interchanges</h3>
+                        <div class="facility-row" th:each="x : ${detail.interchanges}">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span th:replace="~{fragments/components :: chip(${x.fromLine.code}, ${x.fromLine.color}, ${x.fromLine.textColor})}"></span>
+                                <span aria-hidden="true">→</span>
+                                <span th:replace="~{fragments/components :: chip(${x.toLine.code}, ${x.toLine.color}, ${x.toLine.textColor})}"></span>
+                                <a th:href="@{/stations/{id}(id=${x.toStation.id})}" th:text="${x.toStation.name}" th:if="${x.toStation.id != st.id}">other</a>
+                                <span th:if="${x.toStation.id == st.id}">same station</span>
+                            </div>
+                            <span class="meta" th:text="'~' + ${x.minutes} + ' min (estimate)'">8 min</span>
+                        </div>
+                    </th:block>
+                </section>
+
+                <!-- recent reports -->
+                <section class="pebble pebble-pad" aria-labelledby="reports-h">
+                    <h2 id="reports-h" class="h3">Recent reports <span class="meta fw-normal">last 24 hours</span></h2>
+                    <th:block th:if="${detail.recentReports.isEmpty()}"><div th:replace="~{fragments/components :: empty('No crowd reports in the last 24 hours.')}"></div></th:block>
+                    <div class="facility-row" th:each="r : ${detail.recentReports}">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span th:replace="~{fragments/components :: chip(${r.line.code}, ${r.line.color}, ${r.line.textColor})}"></span>
+                            <span th:replace="~{fragments/components :: crowd(${r.level})}"></span>
+                            <span class="pill no-dot" th:classappend="'status-' + ${r.status.name()}" th:text="${r.status.name() == 'APPROVED'} ? 'Verified' : 'Unverified'">status</span>
+                            <span th:if="${@fmt.isPast(r.expiresAt)}" class="pill state-stale no-dot">Expired</span>
+                            <span th:if="${r.demo}" class="demo-tag">Demo</span>
+                            <span class="small text-muted-soft" th:if="${r.comment != null}" th:text="'“' + ${r.comment} + '”'">comment</span>
+                        </div>
+                        <span class="meta text-nowrap" th:text="${@fmt.relative(r.createdAt)}">5 min ago</span>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-lg-5 d-grid gap-4 align-content-start">
+                <!-- alerts -->
+                <section aria-labelledby="alerts-h">
+                    <h2 id="alerts-h" class="h3">Alerts affecting this station</h2>
+                    <div class="d-grid gap-3" th:if="${!status.activeAlerts.isEmpty()}">
+                        <th:block th:each="a : ${status.activeAlerts}"><article th:replace="~{fragments/components :: alertCard(${a})}"></article></th:block>
+                    </div>
+                    <th:block th:if="${status.activeAlerts.isEmpty()}"><div th:replace="~{fragments/components :: empty('No verified alerts for this station right now.')}"></div></th:block>
+                </section>
+
+                <!-- facilities -->
+                <section class="pebble pebble-pad" aria-labelledby="fac-h">
+                    <h2 id="fac-h" class="h3">Facilities</h2>
+                    <div class="mb-3">
+                        <span class="pill no-dot" th:classappend="${status.accessibility.name() == 'STEP_FREE_RECORDED'} ? 'state-verified' : (${status.accessibility.name() == 'NOT_STEP_FREE'} ? 'crowd-very-high' : 'crowd-unknown')"
+                              th:text="${status.accessibility.label}">Unknown</span>
+                    </div>
+                    <div th:if="${status.facilities.isEmpty()}" class="meta">No facility information has been recorded for this station yet.</div>
+                    <div class="facility-row" th:each="f : ${status.facilities}">
+                        <div>
+                            <div class="fw-semibold" th:text="${f.type.label}">Lift</div>
+                            <div class="meta" th:if="${f.description != null}" th:text="${f.description}">desc</div>
+                            <div class="meta">
+                                <span th:text="${f.lastVerifiedAt != null} ? 'Verified ' + ${@fmt.dateTime(f.lastVerifiedAt)} : 'Not verified'">Verified</span>
+                                <span th:if="${f.source != null}" th:text="' · ' + ${f.source}">source</span>
+                            </div>
+                        </div>
+                        <span class="pill" th:classappend="${f.status.name() == 'AVAILABLE'} ? 'crowd-low' : (${f.status.name() == 'OUT_OF_SERVICE'} ? 'crowd-very-high' : 'crowd-unknown')"
+                              th:text="${f.status.label}">Available</span>
+                    </div>
+                    <p class="meta mt-3 mb-0">A recorded lift does not mean every entrance and platform is step-free. Check on arrival.</p>
+                    <a sec:authorize="hasRole('ADMIN')" class="btn btn-soft btn-sm mt-3" th:href="@{/admin/facilities(stationId=${st.id})}">Manage facilities</a>
+                </section>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

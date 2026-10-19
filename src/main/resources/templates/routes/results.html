@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${result.origin.name} + ' to ' + ${result.destination.name})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3" th:with="r=${result}">
+    <div class="container">
+        <a th:href="@{/plan(from=${r.origin.id},to=${r.destination.id},preference=${r.requestedPreference},stepFree=${r.stepFreeRequested})}"
+           class="btn btn-soft btn-sm mb-3">← Change journey</a>
+
+        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-2">
+            <div>
+                <p class="eyebrow mb-1">Your journey</p>
+                <h1 class="mb-0">
+                    <a class="text-reset text-decoration-none" th:href="@{/stations/{id}(id=${r.origin.id})}" th:text="${r.origin.name}">A</a>
+                    <span class="italic-accent">to</span>
+                    <a class="text-reset text-decoration-none" th:href="@{/stations/{id}(id=${r.destination.id})}" th:text="${r.destination.name}">B</a>
+                </h1>
+            </div>
+            <div class="meta text-md-end">
+                Calculated <time th:text="${@fmt.time(r.calculatedAt)}">now</time> IST
+                <span th:if="${r.stepFreeRequested}" class="pill state-verified no-dot ms-1">Step-free interchanges</span>
+                <div th:text="${r.distinctRouteCount} == 1 ? 'One distinct route' : ${r.distinctRouteCount} + ' distinct routes'">routes</div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2 my-3">
+            <div th:each="alert : ${r.alertsConsidered}" class="flash flash-warn">
+                <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9.5 17h-19L12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4m0 3h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <span>Verified alert considered: <strong th:text="${alert.title}">title</strong> - <span th:text="${alert.effect}">effect</span>.
+                    <a th:href="@{/alerts}">Details</a></span>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8 d-grid gap-4">
+                <article th:each="opt : ${r.options}" class="pebble route-card pebble-pad"
+                         th:classappend="${opt.recommended} ? 'recommended' : (${opt.isDuplicate()} ? 'duplicate' : '')"
+                         th:attr="aria-label=${opt.label} + ' route'">
+                    <div class="route-head">
+                        <div>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                <span class="eyebrow" th:text="${opt.label}">Fastest</span>
+                                <span th:if="${opt.recommended}" class="pill state-verified no-dot">Your preference</span>
+                                <span th:if="${opt.isDuplicate()}" class="pill state-reported no-dot"
+                                      th:text="'Same route as ' + ${opt.sameRouteAs.label}">Same</span>
+                            </div>
+                            <div class="big-minutes"><span th:text="${opt.totalMinutes}">24</span><small>min est.</small></div>
+                        </div>
+                        <div class="d-flex flex-wrap">
+                            <div class="metric"><span class="v" th:text="${opt.interchanges}">1</span><span class="k">Changes</span></div>
+                            <div class="metric"><span class="v" th:text="${opt.stationCount}">9</span><span class="k">Stations</span></div>
+                            <div class="metric"><span class="v" th:text="${opt.rideMinutes} + '+' + ${opt.transferMinutes}">18+4</span><span class="k">Ride+walk</span></div>
+                        </div>
+                    </div>
+
+                    <!-- proportional ribbon: one segment per leg, dotted for walks -->
+                    <div class="ribbon" aria-hidden="true" th:unless="${opt.isDuplicate()}">
+                        <span class="r-end"></span>
+                        <th:block th:each="step : ${opt.steps}">
+                            <span class="r-ride" th:if="${step.isRideStep()}"
+                                  th:style="|flex:${step.ride.minutes} 1 0;--line-color:${step.ride.lineColor};--line-text:${step.ride.lineTextColor}|">
+                                <span th:text="${step.ride.lineCode}">1</span></span>
+                            <span class="r-walk" th:unless="${step.isRideStep()}" th:style="|flex:${step.transfer.minutes} 1 0|"></span>
+                        </th:block>
+                        <span class="r-end"></span>
+                    </div>
+
+                    <p class="why mt-3 mb-3"><strong>Why this route?</strong> <span th:text="${opt.explanation}">Because.</span></p>
+
+                    <ul class="list-unstyled d-grid gap-1 mb-3" th:if="${!opt.warnings.isEmpty()}">
+                        <li th:each="w : ${opt.warnings}" class="small d-flex gap-2 align-items-start" style="color:#8a5f06">
+                            <svg width="16" height="16" viewBox="0 0 24 24" class="flex-none mt-1" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v6m0 3.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            <span th:text="${w}">warning</span>
+                        </li>
+                    </ul>
+
+                    <div th:unless="${opt.isDuplicate()}">
+                        <th:block th:each="step : ${opt.steps}">
+                            <section class="leg" th:if="${step.isRideStep()}" th:with="leg=${step.ride}">
+                                <div class="leg-header">
+                                    <span th:replace="~{fragments/components :: chip(${leg.lineCode}, ${leg.lineColor}, ${leg.lineTextColor})}"></span>
+                                    <strong th:text="${leg.boarding().stationName()} + ' → ' + ${leg.alighting().stationName()}">A → B</strong>
+                                    <span class="meta" th:text="'towards ' + ${leg.towards} + ' · ' + ${leg.hops()} + (${leg.hops()} == 1 ? ' stop' : ' stops') + ' · ' + ${leg.minutes} + ' min'">towards</span>
+                                </div>
+                                <details class="stops ms-1" th:open="${opt.recommended}">
+                                    <summary th:text="'Show all ' + ${leg.stops.size()} + ' stations'">Show stations</summary>
+                                    <ol class="thread mt-2" th:style="|--line-color:${leg.lineColor}|">
+                                        <li th:each="stop, s : ${leg.stops}" class="thread-stop" th:classappend="${s.first or s.last} ? terminal">
+                                            <span class="dot" aria-hidden="true"></span>
+                                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                                <a class="stop-name" th:href="@{/stations/{id}(id=${stop.stationId})}" th:text="${stop.stationName}">Stop</a>
+                                                <th:block th:if="${stop.crowdLevel != null}"><span th:replace="~{fragments/components :: crowd(${stop.crowdLevel})}"></span></th:block>
+                                            </div>
+                                        </li>
+                                    </ol>
+                                </details>
+                            </section>
+                            <div class="transfer-row" th:unless="${step.isRideStep()}" th:with="t=${step.transfer}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4.5" r="2" fill="currentColor"/><path d="M10 21l2-6 3 3v3m-6-9l2-4 3 1 2 3h3M11 8l-2 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <span th:if="${t.isWalkBetweenStations()}" th:text="'Walk from ' + ${t.fromStation} + ' (Line ' + ${t.fromLineCode} + ') to ' + ${t.toStation} + ' (Line ' + ${t.toLineCode} + ') · about ' + ${t.minutes} + ' min'">walk</span>
+                                <span th:unless="${t.isWalkBetweenStations()}" th:text="'Change at ' + ${t.fromStation} + ' from Line ' + ${t.fromLineCode} + ' to Line ' + ${t.toLineCode} + ' · about ' + ${t.minutes} + ' min'">change</span>
+                            </div>
+                        </th:block>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-3 meta mt-3 pt-3 border-top">
+                        <span>Route cost <strong th:text="${#numbers.formatDecimal(opt.routeCost, 1, 0)}">24</strong></span>
+                        <span th:if="${opt.delayMinutes > 0}">Alert delay <strong th:text="'+' + ${opt.delayMinutes} + ' min'">+5</strong></span>
+                        <span th:text="${opt.stopsWithCrowdData} == 0 ? 'No current crowd reports on this route' : ${opt.stopsWithCrowdData} + ' stops with current crowd reports'">crowd</span>
+                    </div>
+                </article>
+            </div>
+
+            <aside class="col-lg-4">
+                <div class="pebble-soft p-4 position-sticky" style="top:6.5rem">
+                    <h2 class="h3">Good to know</h2>
+                    <ul class="d-grid gap-2 ps-3 mb-3 text-muted-soft">
+                        <li th:each="note : ${r.notes}" th:text="${note}">note</li>
+                    </ul>
+                    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                        <span class="meta">Crowd key:</span>
+                        <span class="pill crowd-low">Low</span><span class="pill crowd-moderate">Moderate</span>
+                        <span class="pill crowd-high">High</span><span class="pill crowd-very-high">Very high</span>
+                    </div>
+                    <a class="btn btn-moss w-100" th:href="@{/reports/new(stationId=${r.origin.id})}">Report crowding at <span th:text="${r.origin.name}">A</span></a>
+                </div>
+            </aside>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

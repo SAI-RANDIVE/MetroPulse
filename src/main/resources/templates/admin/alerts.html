@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Manage alerts')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+            <div>
+                <p class="eyebrow mb-1">Service alerts</p>
+                <h1 class="h2 mb-0">Alert management</h1>
+            </div>
+            <a class="btn btn-moss" th:href="@{/admin/alerts/new}">＋ New alert</a>
+        </div>
+        <nav th:replace="~{fragments/components :: adminTabs('alerts')}"></nav>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <a class="btn btn-sm" th:classappend="${status == null} ? 'btn-moss' : 'btn-soft'" th:href="@{/admin/alerts}">All</a>
+            <a th:each="st : ${statuses}" class="btn btn-sm" th:classappend="${st == status} ? 'btn-moss' : 'btn-soft'"
+               th:href="@{/admin/alerts(status=${st})}" th:text="${st}">S</a>
+        </div>
+
+        <th:block th:if="${page.isEmpty()}"><div th:replace="~{fragments/components :: empty('No alerts with this status.')}"></div></th:block>
+        <div class="d-grid gap-3">
+            <article class="pebble pebble-pad" th:each="a : ${page.content}">
+                <div class="d-flex flex-wrap justify-content-between gap-3">
+                    <div class="flex-grow-1" style="min-width:260px">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="pill no-dot" th:classappend="'status-' + ${a.status.name()}" th:text="${a.status}">ACTIVE</span>
+                            <span class="sev-badge" th:classappend="'sev-' + ${a.severity.name()}" th:text="${a.severity.label}">Warning</span>
+                            <th:block th:if="${a.line != null}"><span th:replace="~{fragments/components :: chip(${a.line.code}, ${a.line.color}, ${a.line.textColor})}"></span></th:block>
+                            <span class="meta" th:if="${a.station != null}" th:text="${a.station.name}">station</span>
+                            <span th:if="${a.demo}" class="demo-tag">Demo</span>
+                        </div>
+                        <h2 class="h5 mb-1" th:text="${a.title}">title</h2>
+                        <div class="meta">
+                            <span th:text="${a.type.label}">type</span> ·
+                            <span th:text="${a.impact.label}">impact</span><span th:if="${a.delayMinutes > 0}" th:text="' (+' + ${a.delayMinutes} + ' min)'"></span> ·
+                            <span th:text="'from ' + ${@fmt.dateTime(a.startsAt)}">from</span>
+                            <span th:if="${a.endsAt != null}" th:text="' to ' + ${@fmt.dateTime(a.endsAt)}">to</span>
+                        </div>
+                        <div class="meta" th:if="${a.verifiedAt != null}" th:text="'Verified ' + ${@fmt.dateTime(a.verifiedAt)}">verified</div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 align-items-start">
+                        <a th:if="${a.status.isEditable()}" class="btn btn-soft btn-sm" th:href="@{/admin/alerts/{id}/edit(id=${a.id})}">Edit</a>
+                        <form th:each="next : ${a.status.allowedNext()}" th:action="@{/admin/alerts/{id}/status(id=${a.id})}" method="post" class="m-0">
+                            <input type="hidden" name="target" th:value="${next}">
+                            <button type="submit" class="btn btn-sm"
+                                    th:classappend="${next.name() == 'ACTIVE'} ? 'btn-moss' : (${next.name() == 'RESOLVED'} ? 'btn-soft' : 'btn-berry-outline')"
+                                    th:attr="data-confirm=${next.name() == 'CANCELLED'} ? 'Cancel this alert? This cannot be undone.' : null"
+                                    th:text="${next.name() == 'ACTIVE'} ? 'Verify & publish' : (${next.name() == 'RESOLVED'} ? 'Mark resolved' : 'Cancel')">Go</button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        </div>
+        <div th:replace="~{fragments/components :: pagination(${page}, @{/admin/alerts(status=${status})})}"></div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

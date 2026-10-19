@@ -1,0 +1,65 @@
+# Values in ${NAME:default} form come from (highest priority first):
+#   1. OS environment variables / JVM -D properties
+#   2. the root .env file (loaded by DotenvEnvironmentPostProcessor)
+#   3. the safe local defaults written after the colon below
+spring:
+  application:
+    name: ${APP_NAME:MetroPulse}
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:metropulse}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate          # Flyway owns the schema; Hibernate only checks the mapping
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  thymeleaf:
+    cache: false
+
+server:
+  port: ${APP_PORT:8080}
+  error:
+    include-stacktrace: never
+    include-message: never
+  servlet:
+    session:
+      timeout: 60m
+      cookie:
+        http-only: true
+        same-site: lax
+
+logging:
+  level:
+    com.metropulse: INFO
+    org.hibernate.SQL: WARN
+
+metropulse:
+  environment: ${APP_ENV:development}   # development | production
+  time-zone: Asia/Kolkata
+  security:
+    admin-email: ${ADMIN_EMAIL:}
+    admin-password: ${ADMIN_PASSWORD:}
+    admin-display-name: ${ADMIN_DISPLAY_NAME:MetroPulse Admin}
+  demo:
+    enabled: ${DEMO_DATA_ENABLED:true}
+  crowd:
+    report-ttl: 15m                 # a report stops influencing routes after this long
+    stale-window: 6h                # an expired report younger than this is shown as "stale"
+    min-interval-same-station: 5m   # one report per user per station-line in this window
+    max-reports-per-hour: 6         # per user
+  routing:
+    # Demonstration tuning parameters (minutes of extra cost) - NOT measured passenger delays.
+    crowd-penalty:
+      LOW: 0
+      MODERATE: 2
+      HIGH: 6
+      VERY_HIGH: 12
+    transfer-penalty-minutes: 20    # added to each interchange for the "fewer transfers" preference
+  integrations:
+    maps-api-key: ${MAPS_API_KEY:}  # optional, unused when empty

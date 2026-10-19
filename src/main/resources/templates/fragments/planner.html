@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Journey planner form, shared by the home page and the planner page. Works without JavaScript. -->
+<form th:fragment="form(form, stations, preferences)" th:object="${form}" class="pebble planner" th:action="@{/routes}" method="get"
+      data-loading novalidate aria-label="Plan a journey">
+    <div th:if="${#fields.hasGlobalErrors()}" class="flash flash-warn mb-3" role="alert">
+        <span th:each="err : ${#fields.globalErrors()}" th:text="${err}">No route</span>
+    </div>
+    <div class="planner-fields">
+        <div>
+            <div th:replace="~{fragments/components :: stationPicker('from', 'From', ${stations}, *{from}, 'Where are you starting?')}"></div>
+            <div class="field-error mt-1" th:if="${#fields.hasErrors('from')}" th:errors="*{from}">error</div>
+        </div>
+        <button type="button" class="swap-btn" data-swap aria-label="Swap origin and destination" title="Swap">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v14m0 0l-3-3m3 3l3-3M17 20V6m0 0l-3 3m3-3l3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div>
+            <div th:replace="~{fragments/components :: stationPicker('to', 'To', ${stations}, *{to}, 'Where to?')}"></div>
+            <div class="field-error mt-1" th:if="${#fields.hasErrors('to')}" th:errors="*{to}">error</div>
+        </div>
+    </div>
+
+    <fieldset class="mt-3">
+        <legend class="form-label mb-2">I'd prefer</legend>
+        <div class="pref-group">
+            <div class="pref-chip" th:each="p : ${preferences}">
+                <input type="radio" name="preference" th:id="'pref-' + ${p}" th:value="${p}" th:checked="*{preference} == ${p}">
+                <label th:for="'pref-' + ${p}">
+                    <svg th:if="${p.name() == 'FASTEST'}" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6l1-7z" fill="currentColor"/></svg>
+                    <svg th:if="${p.name() == 'LESS_CROWDED'}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="currentColor"/><path d="M2.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 11.5a2.5 2.5 0 1 0 0-5M18 19c-.3-2-1.2-3.4-2.6-4.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".45"/></svg>
+                    <svg th:if="${p.name() == 'FEWER_TRANSFERS'}" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="4" cy="12" r="2.6" fill="currentColor"/><circle cx="20" cy="12" r="2.6" fill="currentColor"/></svg>
+                    <span th:text="${p.label}">Fastest</span>
+                </label>
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-3">
+        <div class="form-check m-0">
+            <input class="form-check-input" type="checkbox" id="stepFree" name="stepFree" value="true" th:checked="*{stepFree}">
+            <label class="form-check-label" for="stepFree">Step-free interchanges only
+                <span class="d-block small text-muted-soft">Uses recorded lift data where it exists</span></label>
+        </div>
+        <button type="submit" class="btn btn-moss btn-lg">Find routes
+            <svg width="18" height="18" viewBox="0 0 24 24" class="ms-1" aria-hidden="true"><path d="M5 12h14m-5-5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+    </div>
+</form>
+</body>
+</html>

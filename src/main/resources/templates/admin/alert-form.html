@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${alertId == null} ? 'New alert' : 'Edit alert')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div class="container" style="max-width:900px">
+        <a th:href="@{/admin/alerts}" class="btn btn-soft btn-sm mb-3">← Alerts</a>
+        <p class="eyebrow mb-1" th:text="${alert != null} ? 'Status: ' + ${alert.status} : 'New draft'">New</p>
+        <h1 class="h2 mb-3" th:text="${alertId == null} ? 'Create a service alert' : 'Edit service alert'">Create</h1>
+
+        <form class="pebble pebble-pad" th:object="${form}" method="post" novalidate data-loading
+              th:action="${alertId == null} ? @{/admin/alerts} : @{/admin/alerts/{id}(id=${alertId})}">
+            <div th:if="${#fields.hasGlobalErrors()}" class="flash flash-error mb-3" role="alert">
+                <span th:each="e : ${#fields.globalErrors()}" th:text="${e}">error</span>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label fw-semibold" for="title">Title</label>
+                    <input class="form-control" th:field="*{title}" th:errorclass="is-invalid" maxlength="140">
+                    <div class="field-error mt-1" th:errors="*{title}">e</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold" for="description">Description for passengers</label>
+                    <textarea class="form-control" th:field="*{description}" th:errorclass="is-invalid" rows="3" maxlength="2000"></textarea>
+                    <div class="field-error mt-1" th:errors="*{description}">e</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold" for="alertType">Category</label>
+                    <select class="form-select" th:field="*{alertType}">
+                        <option th:each="t : ${types}" th:value="${t}" th:text="${t.label}">t</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold" for="severity">Severity</label>
+                    <select class="form-select" th:field="*{severity}">
+                        <option th:each="t : ${severities}" th:value="${t}" th:text="${t.label}">t</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold" for="impact">Effect on routes</label>
+                    <select class="form-select" th:field="*{impact}">
+                        <option th:each="t : ${impacts}" th:value="${t}" th:text="${t.label}">t</option>
+                    </select>
+                </div>
+            </div>
+
+            <fieldset class="pebble-soft p-3 mt-4">
+                <legend class="h6 fw-bold mb-1">What is affected?</legend>
+                <p class="meta mb-3">Pick a line and/or a station. For a segment, pick the line and both end stations:
+                    every connection between them (both directions) is affected. A line with no station and no segment means the whole line.</p>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" for="lineId">Line</label>
+                        <select class="form-select" th:field="*{lineId}">
+                            <option value="">No specific line</option>
+                            <option th:each="l : ${lines}" th:value="${l.id}" th:text="'Line ' + ${l.code}">L</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold" for="stationId">Station (optional)</label>
+                        <select class="form-select" th:field="*{stationId}">
+                            <option value="">No specific station</option>
+                            <option th:each="s : ${stations}" th:value="${s.id}" th:text="${s.name}">S</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" for="segmentFromStationId">Segment from</label>
+                        <select class="form-select" th:field="*{segmentFromStationId}">
+                            <option value="">-</option>
+                            <option th:each="s : ${stations}" th:value="${s.id}" th:text="${s.name}">S</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" for="segmentToStationId">Segment to</label>
+                        <select class="form-select" th:field="*{segmentToStationId}">
+                            <option value="">-</option>
+                            <option th:each="s : ${stations}" th:value="${s.id}" th:text="${s.name}">S</option>
+                        </select>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold" for="delayMinutes">Delay (minutes)</label>
+                    <input type="number" min="0" max="180" class="form-control" th:field="*{delayMinutes}" th:errorclass="is-invalid">
+                    <div class="form-text">Only used when the effect is “Delay”.</div>
+                    <div class="field-error mt-1" th:errors="*{delayMinutes}">e</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold" for="startsAt">Starts (IST)</label>
+                    <input type="datetime-local" class="form-control" th:field="*{startsAt}" th:errorclass="is-invalid">
+                    <div class="field-error mt-1" th:errors="*{startsAt}">e</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold" for="endsAt">Ends (optional)</label>
+                    <input type="datetime-local" class="form-control" th:field="*{endsAt}">
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+                <div class="form-check m-0" th:if="${alertId == null}">
+                    <input class="form-check-input" type="checkbox" th:field="*{publishNow}">
+                    <label class="form-check-label" for="publishNow1">Verify and publish now (otherwise saved as draft)</label>
+                </div>
+                <span th:if="${alertId != null}" class="meta">Saving an active alert re-verifies it under your name.</span>
+                <button type="submit" class="btn btn-moss">Save alert</button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

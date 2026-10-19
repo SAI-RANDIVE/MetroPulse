@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Report crowding')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <p class="eyebrow mb-1">Help fellow commuters</p>
+                <h1 class="mb-2">How busy is it right now?</h1>
+                <p class="lead-soft mb-4">Your report helps the planner suggest calmer routes for the next 15 minutes.
+                    Moderators may verify or reject it.</p>
+
+                <form class="pebble pebble-pad" th:action="@{/reports}" th:object="${form}" method="post" data-loading novalidate>
+                    <div th:if="${#fields.hasGlobalErrors()}" class="flash flash-error mb-3" role="alert">
+                        <span th:each="e : ${#fields.globalErrors()}" th:text="${e}">error</span>
+                    </div>
+
+                    <label class="form-label fw-semibold" for="lineStationId">Station and line</label>
+                    <select class="form-select" th:field="*{lineStationId}" data-combobox
+                            data-placeholder="Type the station you are at" th:errorclass="is-invalid">
+                        <option value="">Choose your station and line</option>
+                        <option th:each="n : ${nodes}" th:value="${n.id}"
+                                th:text="${n.station.name} + ' — Line ' + ${n.line.lineCode}"
+                                th:attr="data-area=${n.station.area},data-lines=${n.line.lineCode}">Station</option>
+                    </select>
+                    <div class="field-error mt-1" th:errors="*{lineStationId}">error</div>
+
+                    <fieldset class="mt-4">
+                        <legend class="form-label fw-semibold">Crowd level</legend>
+                        <div class="level-grid">
+                            <div class="level-option" th:each="lvl, it : ${levels}">
+                                <input type="radio" name="crowdLevel" th:value="${lvl}" th:id="'lvl-' + ${lvl}" th:checked="*{crowdLevel} == ${lvl}">
+                                <label th:for="'lvl-' + ${lvl}" th:classappend="${lvl.cssClass}">
+                                    <span class="people" aria-hidden="true">
+                                        <i th:each="h : ${#numbers.sequence(1, it.count * 2)}" th:style="|height:${10 + (h % 3) * 5}px|"></i>
+                                    </span>
+                                    <span class="t" th:text="${lvl.label}">Low</span>
+                                    <span class="h" th:text="${lvl.hint}">hint</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="field-error mt-1" th:errors="*{crowdLevel}">error</div>
+                    </fieldset>
+
+                    <div class="mt-4">
+                        <label class="form-label fw-semibold" for="comment">Comment <span class="text-muted-soft fw-normal">(optional)</span></label>
+                        <textarea class="form-control" th:field="*{comment}" rows="2" maxlength="280"
+                                  th:errorclass="is-invalid" placeholder="e.g. Long queue at the ticket gates"></textarea>
+                        <div class="field-error mt-1" th:errors="*{comment}">error</div>
+                    </div>
+
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+                        <span class="meta">One report per station every 5 minutes · max 6 per hour</span>
+                        <button type="submit" class="btn btn-moss">Submit report</button>
+                    </div>
+                </form>
+            </div>
+
+            <aside class="col-lg-5">
+                <div class="pebble-soft p-4">
+                    <h2 class="h3">Your recent reports</h2>
+                    <div th:if="${mine.isEmpty()}" class="meta">You have not reported yet. Your first one takes ten seconds.</div>
+                    <div class="facility-row" th:each="r : ${mine.content}">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span th:replace="~{fragments/components :: chip(${r.line.code}, ${r.line.color}, ${r.line.textColor})}"></span>
+                                <a th:href="@{/stations/{id}(id=${r.stationId})}" th:text="${r.stationName}">Station</a>
+                            </div>
+                            <div class="meta mt-1" th:text="${@fmt.dateTime(r.createdAt)}">time</div>
+                        </div>
+                        <div class="text-end d-grid gap-1">
+                            <span th:replace="~{fragments/components :: crowd(${r.level})}"></span>
+                            <span class="pill no-dot" th:classappend="'status-' + ${r.status.name()}" th:text="${r.status.name().toLowerCase()}">pending</span>
+                        </div>
+                    </div>
+                    <div th:replace="~{fragments/components :: pagination(${mine}, @{/reports/new})}"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

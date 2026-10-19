@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Coloured line chip -->
+<span th:fragment="chip(code, color, text)" class="line-chip"
+      th:style="|--line-color:${color};--line-text:${text}|" th:text="${code}"
+      th:attr="aria-label='Line ' + ${code}">2A</span>
+
+<a th:fragment="chipLink(code, color, text)" class="line-chip" th:href="@{/lines/{c}(c=${code})}"
+   th:style="|--line-color:${color};--line-text:${text}|" th:text="${code}"
+   th:attr="aria-label='Line ' + ${code}">2A</a>
+
+<!-- Crowd level pill. level may be null: "No recent reports" - never shown as low. -->
+<span th:fragment="crowd(level)" class="pill"
+      th:classappend="${level == null} ? 'crowd-unknown' : ${level.cssClass}"
+      th:text="${level == null} ? 'No recent reports' : ${level.label}">Unknown</span>
+
+<!-- Crowd status for a station on a line: level + where the information comes from -->
+<span th:fragment="crowdStatus(status)" class="d-inline-flex flex-wrap align-items-center gap-1">
+    <th:block th:switch="${status.state.name()}">
+        <th:block th:case="'VERIFIED'">
+            <span th:replace="~{fragments/components :: crowd(${status.level})}"></span>
+            <span class="pill state-verified no-dot" title="Checked by a MetroPulse administrator">Verified</span>
+        </th:block>
+        <th:block th:case="'USER_REPORTED'">
+            <span th:replace="~{fragments/components :: crowd(${status.level})}"></span>
+            <span class="pill state-reported no-dot" title="Commuter report awaiting moderation">User reported</span>
+        </th:block>
+        <th:block th:case="'STALE'">
+            <span class="pill state-stale" th:text="'Expired: was ' + ${status.level.label}">Expired</span>
+        </th:block>
+        <th:block th:case="*">
+            <span th:replace="~{fragments/components :: crowd(null)}"></span>
+        </th:block>
+    </th:block>
+</span>
+
+<!-- Service alert card -->
+<article th:fragment="alertCard(alert)" class="alert-leaf" th:classappend="'sev-' + ${alert.severity.name()}">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+        <span class="sev-badge" th:classappend="'sev-' + ${alert.severity.name()}" th:text="${alert.severity.label}">Warning</span>
+        <span class="meta" th:text="${alert.type.label}">Service disruption</span>
+        <th:block th:if="${alert.line != null}"><span th:replace="~{fragments/components :: chip(${alert.line.code}, ${alert.line.color}, ${alert.line.textColor})}"></span></th:block>
+        <span th:if="${alert.demo}" class="demo-tag">Demo data</span>
+    </div>
+    <h3 th:text="${alert.title}">Title</h3>
+    <p class="mb-2 text-body" th:text="${alert.description}">Description</p>
+    <div class="meta d-flex flex-wrap gap-3">
+        <span th:if="${alert.station != null}">Station: <a th:href="@{/stations/{id}(id=${alert.station.id})}" th:text="${alert.station.name}">X</a></span>
+        <span th:if="${alert.impact.name() != 'INFORMATION'}"><strong>Route effect:</strong>
+            <span th:text="${alert.impact.label}">effect</span><span th:if="${alert.delayMinutes > 0}" th:text="' (+' + ${alert.delayMinutes} + ' min)'"></span></span>
+        <span th:if="${alert.verifiedAt != null}">Verified <time th:text="${@fmt.dateTime(alert.verifiedAt)}">time</time></span>
+        <span th:if="${alert.endsAt != null}" th:text="(${@fmt.isPast(alert.endsAt)} ? 'Ended ' : 'Expected to end ') + ${@fmt.dateTime(alert.endsAt)}">ends</span>
+    </div>
+</article>
+
+<!-- Station picker: a normal <select> that app.js upgrades into a searchable combobox -->
+<div th:fragment="stationPicker(name, label, stations, selected, placeholder)" class="station-picker">
+    <label class="form-label" th:for="${name}" th:text="${label}">From</label>
+    <select class="form-select" th:id="${name}" th:name="${name}" data-combobox
+            th:attr="data-placeholder=${placeholder}">
+        <option value="" th:text="${placeholder}">Choose a station</option>
+        <option th:each="s : ${stations}" th:value="${s.id}" th:text="${s.name}"
+                th:selected="${selected != null and s.id == selected}"
+                th:attr="data-area=${s.area},data-lines=${#strings.listJoin(s.lines.![code], ' · ')}">Station</option>
+    </select>
+</div>
+
+<!-- Pagination. base is a URL that may already contain query parameters. -->
+<nav th:fragment="pagination(page, base)" th:if="${page.totalPages > 1}" aria-label="Pages" class="mt-3">
+    <ul class="pagination flex-wrap mb-0">
+        <li class="page-item" th:classappend="${page.first} ? disabled">
+            <a class="page-link" th:href="${base + (#strings.contains(base, '?') ? '&' : '?') + 'page=' + (page.number - 1)}">Previous</a>
+        </li>
+        <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
+            th:if="${i < 3 or i > page.totalPages - 3 or (i >= page.number - 1 and i <= page.number + 1)}"
+            th:classappend="${i == page.number} ? active">
+            <a class="page-link" th:href="${base + (#strings.contains(base, '?') ? '&' : '?') + 'page=' + i}" th:text="${i + 1}">1</a>
+        </li>
+        <li class="page-item" th:classappend="${page.last} ? disabled">
+            <a class="page-link" th:href="${base + (#strings.contains(base, '?') ? '&' : '?') + 'page=' + (page.number + 1)}">Next</a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Empty state -->
+<div th:fragment="empty(message)" class="empty">
+    <svg width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M24 6c10 0 18 7 18 17.5S34 42 24 42 6 34.5 6 23.5 14 6 24 6z" fill="currentColor" opacity=".15"/>
+        <path d="M14 26c3 4 7 6 10 6s7-2 10-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="18" cy="19" r="2" fill="currentColor"/><circle cx="30" cy="19" r="2" fill="currentColor"/>
+    </svg>
+    <p class="mb-0" th:text="${message}">Nothing here yet.</p>
+</div>
+
+<!-- Admin section tabs -->
+<nav th:fragment="adminTabs(active)" class="admin-tabs mb-4" aria-label="Administration sections">
+    <a th:href="@{/admin}" th:classappend="${active == 'dashboard'} ? active">Dashboard</a>
+    <a th:href="@{/admin/reports(status='PENDING')}" th:classappend="${active == 'reports'} ? active">Crowd reports</a>
+    <a th:href="@{/admin/alerts}" th:classappend="${active == 'alerts'} ? active">Alerts</a>
+    <a th:href="@{/admin/facilities}" th:classappend="${active == 'facilities'} ? active">Facilities</a>
+    <a th:href="@{/admin/stations}" th:classappend="${active == 'network'} ? active">Stations &amp; lines</a>
+    <a th:href="@{/admin/audit}" th:classappend="${active == 'audit'} ? active">Audit log</a>
+</nav>
+
+</body>
+</html>

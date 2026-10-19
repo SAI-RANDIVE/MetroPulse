@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Service alerts')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div class="container">
+        <p class="eyebrow mb-1">Service alerts</p>
+        <h1 class="mb-2">What's happening on the lines</h1>
+        <p class="lead-soft mb-4">Only alerts verified by a MetroPulse administrator appear here. They are prototype data entered by
+            moderators, not messages from the metro operators.</p>
+
+        <h2 class="h3 mb-3">Active now <span class="meta fw-normal" th:text="'(' + ${active.size()} + ')'">(1)</span></h2>
+        <div class="row g-3 mb-5" th:if="${!active.isEmpty()}">
+            <div class="col-md-6" th:each="a : ${active}" th:id="'alert-' + ${a.id}">
+                <article th:replace="~{fragments/components :: alertCard(${a})}"></article>
+            </div>
+        </div>
+        <div class="mb-5" th:if="${active.isEmpty()}">
+            <div th:replace="~{fragments/components :: empty('No verified alerts are active. Enjoy the ride.')}"></div>
+        </div>
+
+        <h2 class="h3 mb-3">Recently resolved</h2>
+        <div th:if="${resolved.isEmpty()}" class="meta">Nothing resolved recently.</div>
+        <div class="pebble pebble-pad" th:if="${!resolved.isEmpty()}">
+            <div class="facility-row" th:each="a : ${resolved}">
+                <div>
+                    <div class="fw-semibold"><span th:text="${a.title}">title</span> <span th:if="${a.demo}" class="demo-tag ms-1">Demo</span></div>
+                    <div class="meta" th:text="${a.type.label} + ' · ended ' + ${@fmt.dateTime(a.endsAt)}">type</div>
+                </div>
+                <span class="pill status-RESOLVED no-dot">Resolved</span>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

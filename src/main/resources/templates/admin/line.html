@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Manage ' + ${line.name})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="container">
+        <a th:href="@{/admin/stations}" class="btn btn-soft btn-sm mb-3">← Network</a>
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <span th:replace="~{fragments/components :: chip(${line.code}, ${line.color}, ${line.textColor})}"></span>
+            <h1 class="h2 mb-0" th:text="${line.name}">Line</h1>
+        </div>
+        <nav th:replace="~{fragments/components :: adminTabs('network')}"></nav>
+
+        <div class="row g-4">
+            <div class="col-lg-5 d-grid gap-4 align-content-start">
+                <section class="pebble pebble-pad">
+                    <h2 class="h3">Stops</h2>
+                    <p class="meta">Switching a stop off means trains pass through without stopping (no boarding, alighting or changing).</p>
+                    <ol class="thread" th:style="|--line-color:${line.color}|">
+                        <li th:each="stop, it : ${line.stops}" class="thread-stop"
+                            th:classappend="${(it.first or it.last) ? 'terminal ' : ''} + ${!stop.operational ? 'non-stop' : ''}">
+                            <span class="dot" aria-hidden="true"></span>
+                            <div class="d-flex justify-content-between align-items-center gap-2">
+                                <span><span class="seq" th:text="${stop.sequenceNo}">1</span><span class="stop-name" th:text="${stop.stationName}">Stop</span></span>
+                                <form th:action="@{/admin/line-stations/{id}/operational(id=${stop.lineStationId})}" method="post" class="m-0">
+                                    <input type="hidden" name="lineId" th:value="${line.id}">
+                                    <input type="hidden" name="operational" th:value="${!stop.operational}">
+                                    <button type="submit" class="btn btn-sm" th:classappend="${stop.operational} ? 'btn-soft' : 'btn-moss'"
+                                            th:text="${stop.operational} ? 'Skip stop' : 'Restore stop'">toggle</button>
+                                </form>
+                            </div>
+                        </li>
+                    </ol>
+                </section>
+
+                <form class="pebble pebble-pad" th:action="@{/admin/lines/{id}/extend(id=${line.id})}" th:object="${extension}" method="post">
+                    <h2 class="h3">Extend the line</h2>
+                    <p class="meta">Adds an existing station at one end and creates connections in both directions.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="stationId">Station</label>
+                        <select class="form-select" th:field="*{stationId}">
+                            <option value="">Choose a station</option>
+                            <option th:each="s : ${stations}" th:value="${s.id}" th:text="${s.name}">S</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold" for="end">End</label>
+                            <select class="form-select" th:field="*{end}">
+                                <option value="START" th:text="'Before ' + ${line.firstStop()}">start</option>
+                                <option value="END" th:text="'After ' + ${line.lastStop()}">end</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold" for="minutes">Minutes</label>
+                            <input type="number" min="1" max="30" class="form-control" th:field="*{minutes}">
+                        </div>
+                    </div>
+                    <button class="btn btn-moss w-100" type="submit"
+                            data-confirm="Add this station to the line? The route planner uses the change immediately.">Add station</button>
+                </form>
+            </div>
+
+            <div class="col-lg-7">
+                <section class="pebble pebble-pad">
+                    <h2 class="h3">Ride connections</h2>
+                    <p class="meta">Each direction is stored separately. Times are prototype estimates; an inactive connection is left out of routing.</p>
+                    <div class="table-responsive">
+                        <table class="table table-soft">
+                            <thead><tr><th>From</th><th>To</th><th>Minutes</th><th>Active</th><th></th></tr></thead>
+                            <tbody>
+                            <tr th:each="e : ${edges}">
+                                <td th:text="${e.fromNode.station.name}">A</td>
+                                <td th:text="${e.toNode.station.name}">B</td>
+                                <td colspan="3">
+                                    <form class="d-flex gap-2 align-items-center m-0" th:action="@{/admin/edges/{id}(id=${e.id})}" method="post">
+                                        <input type="hidden" name="lineId" th:value="${line.id}">
+                                        <label class="visually-hidden" th:for="'m-' + ${e.id}">Minutes</label>
+                                        <input type="number" min="0" max="60" name="minutes" class="form-control form-control-sm" style="width:5.5rem"
+                                               th:id="'m-' + ${e.id}" th:value="${e.baseMinutes}">
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" role="switch" name="active" value="true"
+                                                   th:id="'a-' + ${e.id}" th:checked="${e.active}">
+                                            <label class="form-check-label visually-hidden" th:for="'a-' + ${e.id}">Active</label>
+                                        </div>
+                                        <button class="btn btn-soft btn-sm ms-auto" type="submit">Save</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

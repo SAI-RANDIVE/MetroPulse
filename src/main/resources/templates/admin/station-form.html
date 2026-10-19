@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${stationId == null} ? 'New station' : 'Edit station')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div class="container" style="max-width:760px">
+        <a th:href="@{/admin/stations}" class="btn btn-soft btn-sm mb-3">← Stations</a>
+        <h1 class="h2 mb-3" th:text="${stationId == null} ? 'Create a station' : 'Edit station'">Station</h1>
+
+        <form class="pebble pebble-pad" th:object="${form}" method="post" novalidate
+              th:action="${stationId == null} ? @{/admin/stations} : @{/admin/stations/{id}(id=${stationId})}">
+            <div th:if="${#fields.hasGlobalErrors()}" class="flash flash-error mb-3" role="alert">
+                <span th:each="e : ${#fields.globalErrors()}" th:text="${e}">error</span>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold" for="code">Code</label>
+                    <input class="form-control" th:field="*{code}" th:errorclass="is-invalid" th:readonly="${stationId != null}" placeholder="e.g. NEW_STATION">
+                    <div class="form-text" th:if="${stationId != null}">The code is a permanent identifier.</div>
+                    <div class="field-error mt-1" th:errors="*{code}">e</div>
+                </div>
+                <div class="col-md-7">
+                    <label class="form-label fw-semibold" for="name">Name</label>
+                    <input class="form-control" th:field="*{name}" th:errorclass="is-invalid" maxlength="120">
+                    <div class="field-error mt-1" th:errors="*{name}">e</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="area">Area</label>
+                    <input class="form-control" th:field="*{area}" maxlength="120">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="status">Status</label>
+                    <select class="form-select" th:field="*{status}">
+                        <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}">OPEN</option>
+                    </select>
+                    <div class="form-text">A closed station stays on its line, but nobody can board, alight or change there.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="latitude">Latitude (optional)</label>
+                    <input class="form-control" th:field="*{latitude}" th:errorclass="is-invalid" inputmode="decimal">
+                    <div class="field-error mt-1" th:errors="*{latitude}">e</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold" for="longitude">Longitude (optional)</label>
+                    <input class="form-control" th:field="*{longitude}" th:errorclass="is-invalid" inputmode="decimal">
+                    <div class="field-error mt-1" th:errors="*{longitude}">e</div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-end mt-4">
+                <button type="submit" class="btn btn-moss">Save station</button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

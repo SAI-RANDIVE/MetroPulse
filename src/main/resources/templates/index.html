@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Journeys across Mumbai Metro')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <section class="hero">
+        <div class="hero-blob one" aria-hidden="true"></div>
+        <div class="hero-blob two" aria-hidden="true"></div>
+        <div class="container">
+            <div class="row g-4 g-xl-5 align-items-center">
+                <div class="col-lg-7">
+                    <p class="eyebrow mb-2">Mumbai Metro · Lines 1, 2A &amp; 7</p>
+                    <h1 class="mb-3">Find a <span class="italic-accent">calmer</span> way across the city.</h1>
+                    <p class="lead-soft mb-4">
+                        MetroPulse plans station-to-station journeys and weighs them against fresh crowd reports
+                        from fellow commuters and alerts verified by our moderators.
+                    </p>
+                    <div th:replace="~{fragments/planner :: form(${form}, ${stations}, ${preferences})}"></div>
+                </div>
+
+                <div class="col-lg-5">
+                    <figure class="pebble pebble-pad mb-0" aria-labelledby="schematic-caption"
+                            th:with="l1=${lines.?[code == '1']}, l2a=${lines.?[code == '2A']}, l7=${lines.?[code == '7']}">
+                        <svg class="schematic" viewBox="0 0 400 300" role="img" aria-labelledby="schematic-title">
+                            <title id="schematic-title">Schematic of Mumbai Metro Lines 1, 2A and 7 and their interchanges</title>
+                            <path d="M0 300 C 80 260, 120 280, 200 250 S 330 280, 400 240 L400 300z" fill="#efe6d4" opacity=".7"/>
+                            <g th:if="${!l2a.isEmpty()}" fill="none" stroke-linecap="round">
+                                <path d="M128 40 C 72 92, 58 168, 94 228" th:attr="stroke=${l2a[0].color}" stroke-width="9"/>
+                            </g>
+                            <g th:if="${!l7.isEmpty()}" fill="none" stroke-linecap="round">
+                                <path d="M128 40 C 236 72, 304 146, 292 220" th:attr="stroke=${l7[0].color}" stroke-width="9"/>
+                            </g>
+                            <g th:if="${!l1.isEmpty()}" fill="none" stroke-linecap="round">
+                                <path d="M24 258 C 84 248, 200 238, 304 238 S 366 252, 380 250" th:attr="stroke=${l1[0].color}" stroke-width="9"/>
+                            </g>
+                            <!-- walking links -->
+                            <path d="M94 228 L 106 246" stroke="#46524b" stroke-width="2.5" stroke-dasharray="2 4" stroke-linecap="round"/>
+                            <path d="M292 220 L 300 238" stroke="#46524b" stroke-width="2.5" stroke-dasharray="2 4" stroke-linecap="round"/>
+                            <!-- stations -->
+                            <g fill="#fffcf6" stroke="#1f2a24" stroke-width="3.2">
+                                <circle cx="128" cy="40" r="8"/>
+                                <circle cx="94" cy="228" r="6.5"/><circle cx="106" cy="246" r="6.5"/>
+                                <circle cx="292" cy="220" r="6.5"/><circle cx="300" cy="238" r="6.5"/>
+                                <circle cx="24" cy="258" r="5.5"/><circle cx="380" cy="250" r="5.5"/>
+                            </g>
+                            <text x="116" y="36" text-anchor="end" class="lbl-strong">Dahisar (East)</text>
+                            <text x="116" y="51" text-anchor="end" class="lbl">2A ↔ 7</text>
+                            <text x="26" y="214" class="lbl">Andheri (W)</text>
+                            <text x="96" y="272" class="lbl">D N Nagar</text>
+                            <text x="282" y="212" text-anchor="end" class="lbl">Gundavali</text>
+                            <text x="312" y="230" class="lbl">WEH</text>
+                            <text x="10" y="282" class="lbl">Versova</text>
+                            <text x="340" y="274" class="lbl">Ghatkopar</text>
+                            <text x="120" y="150" class="note">Line 2A</text>
+                            <text x="270" y="98" class="note">Line 7</text>
+                            <text x="180" y="230" class="note">Line 1</text>
+                        </svg>
+                        <figcaption id="schematic-caption" class="meta mt-2">
+                            Schematic, not to scale. Dotted links are walking interchanges.
+                        </figcaption>
+                    </figure>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section pt-4">
+        <div class="container">
+            <div class="section-title">
+                <div>
+                    <p class="eyebrow mb-1">Right now</p>
+                    <h2>Verified service alerts</h2>
+                </div>
+                <a class="btn btn-soft btn-sm" th:href="@{/alerts}">All alerts</a>
+            </div>
+            <div class="row g-3" th:if="${!alerts.isEmpty()}">
+                <div class="col-md-6 col-xl-4" th:each="alert, it : ${alerts}" th:if="${it.index < 3}">
+                    <article th:replace="~{fragments/components :: alertCard(${alert})}"></article>
+                </div>
+            </div>
+            <th:block th:if="${alerts.isEmpty()}"><div th:replace="~{fragments/components :: empty('No verified service alerts right now. Unverified information is never shown here.')}"></div></th:block>
+        </div>
+    </section>
+
+    <section class="section pt-2">
+        <div class="container">
+            <div class="section-title">
+                <div>
+                    <p class="eyebrow mb-1">Explore the network</p>
+                    <h2>Three lines, one loop</h2>
+                </div>
+                <a class="btn btn-soft btn-sm" th:href="@{/stations}">Station directory</a>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4" th:each="line : ${lines}">
+                    <a class="pebble pebble-pad line-card lift d-block text-decoration-none text-body h-100"
+                       th:href="@{/lines/{c}(c=${line.code})}" th:style="|--line-color:${line.color}|">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span th:replace="~{fragments/components :: chip(${line.code}, ${line.color}, ${line.textColor})}"></span>
+                            <span class="meta" th:text="${line.stops.size()} + ' stops'">12 stops</span>
+                        </div>
+                        <div class="terminals">
+                            <span th:text="${line.firstStop()}">A</span><span class="arrow" aria-hidden="true">⟷</span><span th:text="${line.lastStop()}">B</span>
+                        </div>
+                        <div class="bead-strip" aria-hidden="true">
+                            <th:block th:each="stop, it : ${line.stops}">
+                                <span class="bead" th:classappend="${it.first or it.last or stop.isInterchange()} ? x"></span>
+                                <span class="seg" th:unless="${it.last}"></span>
+                            </th:block>
+                        </div>
+                        <div class="meta" th:text="${line.operatorName}">Operator</div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="pebble-soft p-3 p-md-4 mt-4" th:if="${!interchanges.isEmpty()}">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="eyebrow me-2">Interchange stations</span>
+                    <a th:each="s : ${interchanges}" class="btn btn-soft btn-sm" th:href="@{/stations/{id}(id=${s.id})}">
+                        <span th:text="${s.name}">Station</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section pt-2">
+        <div class="container">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="pebble pebble-pad h-100">
+                        <p class="eyebrow mb-2">How routes are found</p>
+                        <h3>Shortest paths, weighed honestly</h3>
+                        <p class="mb-0 text-muted-soft">Each station-on-a-line is a graph node. Dijkstra's algorithm finds the
+                            cheapest path for your preference using estimated minutes, interchange walks and active alerts.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="pebble pebble-pad h-100">
+                        <p class="eyebrow mb-2">Crowd reports</p>
+                        <h3>Fresh for 15 minutes</h3>
+                        <p class="mb-0 text-muted-soft">Signed-in commuters report how busy a platform is. Reports expire quickly,
+                            and missing data is shown as unknown - never as "quiet".</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="pebble pebble-pad h-100">
+                        <p class="eyebrow mb-2">Alerts</p>
+                        <h3>Verified before shown</h3>
+                        <p class="mb-0 text-muted-soft">Moderators publish alerts. A suspended segment is removed from route
+                            planning; a delay adds minutes to the affected connections only.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

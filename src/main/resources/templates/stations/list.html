@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Stations and lines')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div class="container">
+        <p class="eyebrow mb-1">Station directory</p>
+        <h1 class="mb-3">Every stop, <span class="italic-accent">gently</span> organised.</h1>
+
+        <form class="search-pill mb-4" th:action="@{/stations}" method="get" role="search">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <label for="q" class="visually-hidden">Search stations by name or area</label>
+            <input id="q" name="q" type="search" class="form-control" th:value="${q}" data-live-filter
+                   placeholder="Search by name or area - try “andheri w” or “dn nagar”">
+        </form>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4" th:each="line : ${lines}">
+                <a class="pebble pebble-pad line-card lift d-flex align-items-center justify-content-between gap-2 text-decoration-none text-body h-100"
+                   th:href="@{/lines/{c}(c=${line.code})}" th:style="|--line-color:${line.color}|">
+                    <span>
+                        <span th:replace="~{fragments/components :: chip(${line.code}, ${line.color}, ${line.textColor})}"></span>
+                        <span class="d-block mt-2 fw-semibold" th:text="${line.firstStop()} + ' – ' + ${line.lastStop()}">A – B</span>
+                    </span>
+                    <span class="meta text-nowrap" th:text="${line.stops.size()} + ' stops →'">12 stops</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h3 mb-0" th:text="${#strings.isEmpty(q)} ? 'All stations' : 'Results for “' + ${q} + '”'">All stations</h2>
+            <span class="meta" data-filter-count th:text="${results.size()} + ' stations'">42 stations</span>
+        </div>
+
+        <th:block th:if="${results.isEmpty()}"><div th:replace="~{fragments/components :: empty('No station matches that search. Try part of the name, such as “ghat” or “malad”.')}"></div></th:block>
+        <div data-filter-empty hidden th:if="${!results.isEmpty()}">
+            <div th:replace="~{fragments/components :: empty('No station matches that filter.')}"></div>
+        </div>
+
+        <th:block th:each="s, it : ${results}" th:with="letter=${#strings.substring(s.name, 0, 1)}">
+            <th:block th:if="${it.first or #strings.substring(results[it.index - 1].name, 0, 1) != letter}">
+                <section data-filter-group th:attr="aria-label='Stations starting with ' + ${letter}">
+                    <div class="letter-head" th:text="${letter}">A</div>
+                    <div class="row g-3">
+                        <div class="col-sm-6 col-lg-4 col-xl-3"
+                             th:each="t : ${results}" th:if="${#strings.substring(t.name, 0, 1) == letter}"
+                             th:attr="data-filter-item=${t.name} + ' ' + ${t.area}">
+                            <a class="pebble station-tile lift" th:href="@{/stations/{id}(id=${t.id})}">
+                                <div class="name" th:text="${t.name}">Station</div>
+                                <div class="meta mb-2" th:text="${t.area}">Area</div>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <th:block th:each="l : ${t.lines}"><span th:replace="~{fragments/components :: chip(${l.code}, ${l.color}, ${l.textColor})}"></span></th:block>
+                                    <span th:if="${t.status.name() == 'CLOSED'}" class="pill crowd-very-high no-dot">Closed</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </section>
+            </th:block>
+        </th:block>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

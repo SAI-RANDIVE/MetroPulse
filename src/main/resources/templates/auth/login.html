@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Sign in')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main">
+    <div class="container">
+        <div class="auth-wrap">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+            <div class="pebble auth-card pebble-pad">
+                <p class="eyebrow mb-1">Welcome back</p>
+                <h1 class="h2 mb-3">Sign in to MetroPulse</h1>
+
+                <div th:if="${param.error}" class="flash flash-error mb-3" role="alert">That email and password do not match an account.</div>
+                <div th:if="${param.expired}" class="flash flash-info mb-3" role="status">Your session expired. Please sign in again.</div>
+
+                <form th:action="@{/login}" method="post" data-loading>
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-semibold">Email</label>
+                        <input id="email" name="email" type="email" class="form-control" autocomplete="username" required autofocus>
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-semibold">Password</label>
+                        <input id="password" name="password" type="password" class="form-control" autocomplete="current-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-moss w-100">Sign in</button>
+                </form>
+                <p class="meta mt-4 mb-0 text-center">New here? <a th:href="@{/register}">Create a commuter account</a></p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

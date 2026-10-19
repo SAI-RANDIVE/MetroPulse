@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="MetroPulse - crowd-aware journey planning for Mumbai Metro Lines 1, 2A and 7 (academic prototype).">
+    <meta name="theme-color" content="#f6f1e7">
+    <title th:text="${title} + ' · MetroPulse'">MetroPulse</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<header th:fragment="nav" class="site-header">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="container">
+        <nav class="navbar navbar-expand-lg nav-capsule" aria-label="Main navigation">
+            <a class="brand me-3" th:href="@{/}">
+                <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+                    <path d="M20 2.5c9.6 0 17.3 6.9 17.3 17.1 0 10.6-7.9 17.9-17.6 17.9C10 37.5 2.7 30.4 2.7 20.3 2.7 9.9 10.3 2.5 20 2.5z" fill="#2f5d50"/>
+                    <path d="M7.5 21.5h7l2.6-6.4 4.3 12 3-7.6 1.6 2h6.5" fill="none" stroke="#f6f1e7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="32.5" cy="21.5" r="2.4" fill="#ffc600"/>
+                </svg>
+                MetroPulse
+            </a>
+            <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                    aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h11M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto gap-lg-1">
+                    <li class="nav-item"><a class="nav-link" th:classappend="${currentPath == '/plan' or currentPath == '/routes'} ? active" th:href="@{/plan}">Plan a journey</a></li>
+                    <li class="nav-item"><a class="nav-link" th:classappend="${currentPath != null and (currentPath.startsWith('/stations') or currentPath.startsWith('/lines'))} ? active" th:href="@{/stations}">Stations &amp; lines</a></li>
+                    <li class="nav-item"><a class="nav-link" th:classappend="${currentPath == '/alerts'} ? active" th:href="@{/alerts}">Service alerts</a></li>
+                    <li class="nav-item"><a class="nav-link" th:classappend="${currentPath != null and currentPath.startsWith('/reports')} ? active" th:href="@{/reports/new}">Report crowding</a></li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" th:classappend="${currentPath != null and currentPath.startsWith('/admin')} ? active" th:href="@{/admin}">Admin</a></li>
+                </ul>
+                <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+                    <th:block sec:authorize="isAnonymous()">
+                        <a class="btn btn-soft btn-sm" th:href="@{/login}">Sign in</a>
+                        <a class="btn btn-moss btn-sm" th:href="@{/register}">Join</a>
+                    </th:block>
+                    <th:block sec:authorize="isAuthenticated()">
+                        <span class="small text-muted-soft d-none d-xl-inline">Hi, <strong class="text-body" sec:authentication="principal.displayName">you</strong></span>
+                        <form th:action="@{/logout}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-soft btn-sm">Sign out</button>
+                        </form>
+                    </th:block>
+                </div>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<div th:fragment="flash" class="container">
+    <div th:if="${success}" class="flash flash-success mb-3" role="status">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span th:text="${success}">Saved</span>
+    </div>
+    <div th:if="${error}" class="flash flash-error mb-3" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v6m0 4h.01" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span th:text="${error}">Problem</span>
+    </div>
+</div>
+
+<footer th:fragment="footer" class="site-footer">
+    <div class="container">
+        <svg class="wave-divider mb-4" viewBox="0 0 1200 28" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 14 C 150 0, 300 28, 450 14 S 750 0, 900 14 S 1100 28, 1200 14" fill="none" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="brand mb-2">MetroPulse</div>
+                <p class="disclaimer mb-0">
+                    An academic prototype - <strong>not</strong> an official Mumbai Metro service. Journey times are estimates,
+                    crowd levels come from commuter reports, and alerts are entered by MetroPulse administrators.
+                    Always follow announcements from the metro operators.
+                </p>
+            </div>
+            <div class="col-6 col-lg-2">
+                <div class="eyebrow mb-2">Explore</div>
+                <ul class="list-unstyled d-grid gap-1 mb-0">
+                    <li><a th:href="@{/plan}">Journey planner</a></li>
+                    <li><a th:href="@{/stations}">Station directory</a></li>
+                    <li><a th:href="@{/alerts}">Service alerts</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="eyebrow mb-2">Lines covered</div>
+                <ul class="list-unstyled d-grid gap-1 mb-0">
+                    <li><a th:href="@{/lines/1}">Line 1 · Versova – Ghatkopar</a></li>
+                    <li><a th:href="@{/lines/2A}">Line 2A · Dahisar (E) – Andheri (W)</a></li>
+                    <li><a th:href="@{/lines/7}">Line 7 · Gundavali – Dahisar (E)</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<th:block th:fragment="scripts">
+    <script th:src="@{/vendor/bootstrap/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/js/app.js}"></script>
+</th:block>
+
+</body>
+</html>

@@ -1,0 +1,3 @@
+org.springframework.boot.EnvironmentPostProcessor=\
+com.metropulse.config.DotenvEnvironmentPostProcessor,\
+com.metropulse.config.ProductionSafetyCheck

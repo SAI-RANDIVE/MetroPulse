@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Crowd reports')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="container">
+        <p class="eyebrow mb-1">Moderation</p>
+        <h1 class="h2 mb-3">Crowd reports</h1>
+        <nav th:replace="~{fragments/components :: adminTabs('reports')}"></nav>
+
+        <form class="pebble pebble-pad filter-bar mb-3" th:action="@{/admin/reports}" method="get">
+            <div>
+                <label class="form-label small fw-semibold" for="f-status">Status</label>
+                <select id="f-status" name="status" class="form-select">
+                    <option value="">Any</option>
+                    <option th:each="st : ${statuses}" th:value="${st}" th:text="${st}" th:selected="${st == status}">S</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label small fw-semibold" for="f-line">Line</label>
+                <select id="f-line" name="lineId" class="form-select">
+                    <option value="">Any</option>
+                    <option th:each="l : ${lines}" th:value="${l.id}" th:text="'Line ' + ${l.code}" th:selected="${lineId != null and l.id == lineId}">L</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label small fw-semibold" for="f-level">Level</label>
+                <select id="f-level" name="level" class="form-select">
+                    <option value="">Any</option>
+                    <option th:each="lv : ${levels}" th:value="${lv}" th:text="${lv.label}" th:selected="${lv == level}">L</option>
+                </select>
+            </div>
+            <button class="btn btn-moss" type="submit">Filter</button>
+            <a class="btn btn-soft" th:href="@{/admin/reports}">Clear</a>
+            <span class="meta ms-auto" th:text="${page.totalElements} + ' reports'">0</span>
+        </form>
+
+        <div class="pebble pebble-pad">
+            <th:block th:if="${page.isEmpty()}"><div th:replace="~{fragments/components :: empty('No reports match these filters.')}"></div></th:block>
+            <div class="table-responsive" th:if="${!page.isEmpty()}">
+                <table class="table table-soft">
+                    <thead><tr><th>#</th><th>Station</th><th>Level</th><th>Comment</th><th>Reporter</th><th>Submitted</th><th>Status</th><th class="text-end">Action</th></tr></thead>
+                    <tbody>
+                    <tr th:each="r : ${page.content}">
+                        <td class="meta" th:text="${r.id}">1</td>
+                        <td><span th:replace="~{fragments/components :: chip(${r.line.code}, ${r.line.color}, ${r.line.textColor})}"></span>
+                            <a class="ms-1" th:href="@{/stations/{id}(id=${r.stationId})}" th:text="${r.stationName}">X</a>
+                            <span th:if="${r.demo}" class="demo-tag ms-1">Demo</span></td>
+                        <td><span th:replace="~{fragments/components :: crowd(${r.level})}"></span></td>
+                        <td class="small" style="max-width:220px" th:text="${r.comment != null ? r.comment : '-'}">c</td>
+                        <td class="small" th:text="${r.reporterName}">name</td>
+                        <td class="meta text-nowrap">
+                            <span th:text="${@fmt.dateTime(r.createdAt)}">t</span>
+                            <span class="d-block" th:text="${@fmt.isPast(r.expiresAt)} ? 'expired' : 'counts until ' + ${@fmt.time(r.expiresAt)}">exp</span>
+                        </td>
+                        <td>
+                            <span class="pill no-dot" th:classappend="'status-' + ${r.status.name()}" th:text="${r.status}">P</span>
+                            <span class="meta d-block" th:if="${r.verifiedByName != null}" th:text="'by ' + ${r.verifiedByName}">by</span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1" th:if="${r.status.name() == 'PENDING'}">
+                                <form th:action="@{/admin/reports/{id}/verification(id=${r.id})}" method="post" class="m-0">
+                                    <input type="hidden" name="decision" value="APPROVED">
+                                    <button class="btn btn-moss btn-sm" type="submit">Approve</button>
+                                </form>
+                                <form th:action="@{/admin/reports/{id}/verification(id=${r.id})}" method="post" class="m-0">
+                                    <input type="hidden" name="decision" value="REJECTED">
+                                    <button class="btn btn-berry-outline btn-sm" type="submit">Reject</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div th:replace="~{fragments/components :: pagination(${page}, @{/admin/reports(status=${status},lineId=${lineId},level=${level})})}"></div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

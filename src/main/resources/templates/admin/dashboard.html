@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin dashboard')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav}"></header>
+
+<main id="main" class="section pt-3" th:with="s=${stats}">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+            <div>
+                <p class="eyebrow mb-1">Administration</p>
+                <h1 class="mb-0">Good to see you.</h1>
+            </div>
+            <form th:if="${demoResetAllowed}" th:action="@{/admin/demo/reset}" method="post" class="m-0">
+                <button type="submit" class="btn btn-soft btn-sm"
+                        data-confirm="Replace all records flagged as demo data? Real reports, alerts and facilities are not touched.">
+                    Reset demo data</button>
+            </form>
+        </div>
+        <nav th:replace="~{fragments/components :: adminTabs('dashboard')}"></nav>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4 col-xl-2"><div class="pebble stat accent"><div class="n" th:text="${s.pendingReports}">3</div><div class="k">Pending reports</div></div></div>
+            <div class="col-6 col-md-4 col-xl-2"><div class="pebble stat"><div class="n" th:text="${s.activeAlerts}">1</div><div class="k">Active alerts</div></div></div>
+            <div class="col-6 col-md-4 col-xl-2"><div class="pebble stat"><div class="n" th:text="${s.draftAlerts}">1</div><div class="k">Draft alerts</div></div></div>
+            <div class="col-6 col-md-4 col-xl-2"><div class="pebble stat"><div class="n" th:text="${s.reportsLast24h}">8</div><div class="k">Reports · 24 h</div></div></div>
+            <div class="col-6 col-md-4 col-xl-2"><div class="pebble stat"><div class="n" th:text="${s.lineCount}">3</div><div class="k">Metro lines</div></div></div>
+            <div class="col-6 col-md-4 col-xl-2"><div class="pebble stat"><div class="n" th:text="${s.stationCount}">42</div><div class="k">Stations</div></div></div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-lg-5">
+                <section class="pebble pebble-pad h-100">
+                    <h2 class="h3">Crowd levels reported <span class="meta fw-normal">last 7 days</span></h2>
+                    <div class="chart-box">
+                        <canvas id="crowdChart" role="img" aria-label="Crowd report distribution"
+                                th:attr="data-labels=${s.crowdLabels()},data-values=${s.crowdValues()}"></canvas>
+                    </div>
+                    <p class="meta mt-2 mb-0">
+                        <span th:each="e, it : ${s.crowdDistributionLast7Days}" th:text="${e.key} + ': ' + ${e.value} + (${it.last} ? '' : ' · ')">LOW: 1</span>
+                    </p>
+                </section>
+            </div>
+            <div class="col-lg-7">
+                <section class="pebble pebble-pad h-100">
+                    <h2 class="h3">Most reported stations <span class="meta fw-normal">last 7 days</span></h2>
+                    <th:block th:if="${s.mostReportedStationsLast7Days.isEmpty()}"><div th:replace="~{fragments/components :: empty('No reports this week yet.')}"></div></th:block>
+                    <div class="chart-box" th:if="${!s.mostReportedStationsLast7Days.isEmpty()}">
+                        <canvas id="topStationsChart" role="img" aria-label="Stations with the most crowd reports"
+                                th:attr="data-labels=${s.topStationLabels()},data-values=${s.topStationValues()}"></canvas>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7 d-grid gap-4 align-content-start">
+                <section class="pebble pebble-pad">
+                    <div class="d-flex justify-content-between align-items-baseline mb-2">
+                        <h2 class="h3 mb-0">Awaiting verification</h2>
+                        <a th:href="@{/admin/reports(status='PENDING')}">Review all</a>
+                    </div>
+                    <th:block th:if="${pending.isEmpty()}"><div th:replace="~{fragments/components :: empty('No reports are waiting. Nicely done.')}"></div></th:block>
+                    <div class="facility-row" th:each="r : ${pending}">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span th:replace="~{fragments/components :: chip(${r.line.code}, ${r.line.color}, ${r.line.textColor})}"></span>
+                            <strong th:text="${r.stationName}">Station</strong>
+                            <span th:replace="~{fragments/components :: crowd(${r.level})}"></span>
+                            <span class="meta" th:text="${@fmt.relative(r.createdAt)} + ' · ' + ${r.reporterName}">time</span>
+                            <span th:if="${r.demo}" class="demo-tag">Demo</span>
+                        </div>
+                        <div class="d-flex gap-1">
+                            <form th:action="@{/admin/reports/{id}/verification(id=${r.id})}" method="post" class="m-0">
+                                <input type="hidden" name="decision" value="APPROVED"><input type="hidden" name="back" value="/admin">
+                                <button class="btn btn-moss btn-sm" type="submit">Approve</button>
+                            </form>
+                            <form th:action="@{/admin/reports/{id}/verification(id=${r.id})}" method="post" class="m-0">
+                                <input type="hidden" name="decision" value="REJECTED"><input type="hidden" name="back" value="/admin">
+                                <button class="btn btn-berry-outline btn-sm" type="submit">Reject</button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="pebble pebble-pad">
+                    <h2 class="h3">Recent submissions</h2>
+                    <div class="table-responsive">
+                        <table class="table table-soft">
+                            <thead><tr><th>Station</th><th>Level</th><th>Status</th><th>When</th></tr></thead>
+                            <tbody>
+                            <tr th:each="r : ${recent}">
+                                <td><span th:replace="~{fragments/components :: chip(${r.line.code}, ${r.line.color}, ${r.line.textColor})}"></span>
+                                    <span class="ms-1" th:text="${r.stationName}">X</span></td>
+                                <td><span th:replace="~{fragments/components :: crowd(${r.level})}"></span></td>
+                                <td><span class="pill no-dot" th:classappend="'status-' + ${r.status.name()}" th:text="${r.status}">P</span></td>
+                                <td class="meta" th:text="${@fmt.relative(r.createdAt)}">now</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-lg-5 d-grid gap-4 align-content-start">
+                <section class="pebble pebble-pad">
+                    <h2 class="h3">Network integrity</h2>
+                    <p class="mb-2"><strong th:text="${s.graphNodes}">43</strong> station-line nodes ·
+                        <strong th:text="${s.graphEdges}">86</strong> active connections in the routing graph.</p>
+                    <div th:if="${s.networkIssues.isEmpty()}" class="flash flash-success">No invalid connections found.</div>
+                    <div th:if="${!s.networkIssues.isEmpty()}" class="flash flash-warn d-block">
+                        <strong th:text="${s.networkIssues.size()} + ' connection(s) excluded from routing:'">Issues</strong>
+                        <ul class="mb-0 mt-1"><li th:each="i : ${s.networkIssues}" th:text="${i}">issue</li></ul>
+                    </div>
+                </section>
+
+                <section class="pebble pebble-pad">
+                    <h2 class="h3">Manage</h2>
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-soft text-start" th:href="@{/admin/alerts/new}">＋ New service alert</a>
+                        <a class="btn btn-soft text-start" th:href="@{/admin/facilities}">Station facilities</a>
+                        <a class="btn btn-soft text-start" th:href="@{/admin/stations}">Stations, lines &amp; connections</a>
+                    </div>
+                </section>
+
+                <section class="pebble pebble-pad">
+                    <div class="d-flex justify-content-between align-items-baseline mb-2">
+                        <h2 class="h3 mb-0">Recent admin actions</h2>
+                        <a th:href="@{/admin/audit}">Audit log</a>
+                    </div>
+                    <div th:if="${audit.isEmpty()}" class="meta">No actions recorded yet.</div>
+                    <div class="facility-row" th:each="a : ${audit}">
+                        <div>
+                            <div class="fw-semibold small" th:text="${a.action}">ACTION</div>
+                            <div class="meta" th:text="${a.details}">details</div>
+                        </div>
+                        <span class="meta text-end text-nowrap" th:text="${@fmt.relative(a.createdAt)}">now</span>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/vendor/chartjs/chart.umd.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+</body>
+</html>
