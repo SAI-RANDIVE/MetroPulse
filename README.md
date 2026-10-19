@@ -1,15 +1,62 @@
+<div align="center">
+
+<img src="https://user-images.githubusercontent.com/74038190/213844263-a8897a51-32f4-4b3b-b5c2-e1528b89f6f3.png" width="44" />
+
 # MetroPulse
 
-**A crowd-aware smart journey planning and station information system for Mumbai Metro**
+### A crowd-aware smart journey planner for Mumbai Metro
 
-MetroPulse is an academic mini-project built with **Java 21 and Spring Boot**. It plans station-to-station
-journeys on Mumbai Metro **Lines 1, 2A and 7** with Dijkstra's shortest-path algorithm, compares the fastest,
-less-crowded and fewer-transfer routes, and shows commuter crowd reports and administrator-verified service alerts.
+<img src="https://github.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/assets/74038190/f5d2d866-d25c-4873-8d82-425d2c62fc2e" width="420" alt="Developer building a web application" />
+
+<br/>
+
+![Java](https://img.shields.io/badge/Java-21-2f5d50?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0.8-1e7a6b?style=for-the-badge&logo=springboot&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-3e6e8e?style=for-the-badge&logo=postgresql&logoColor=white)
+![Thymeleaf](https://img.shields.io/badge/Thymeleaf-UI-5c9a6b?style=for-the-badge&logo=thymeleaf&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-84_passing-c4663f?style=for-the-badge)
+
+**Full Stack Java Programming · Academic mini-project**
+
+| Team member | Roll No. |
+|:---:|:---:|
+| **Maithili Pawar** | D-248 |
+| **Maitri Borkar** | D-215 |
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="100%" />
+
+</div>
+
+MetroPulse plans station-to-station journeys on Mumbai Metro **Lines 1, 2A and 7** with Dijkstra's
+shortest-path algorithm. It compares the fastest, less-crowded and fewer-transfer routes, and shows commuter
+crowd reports and administrator-verified service alerts. It is built with **Java 21 and Spring Boot**.
 
 > This is a student prototype, **not** an official Mumbai Metro service. Travel times are estimates, crowd levels
 > come from user reports, and alerts are entered by MetroPulse administrators.
 
----
+## <img src="https://user-images.githubusercontent.com/74038190/216122069-5b8169d7-1d8e-4a13-b245-a8e4176c99f8.png" width="30" /> Quick start
+
+```bash
+mvn spring-boot:test-run -Dspring-boot.run.main-class=com.metropulse.LocalDevApplication
+```
+
+Open **http://localhost:8080** and sign in as `admin@metropulse.local` / `CHANGE_ME_BEFORE_DEPLOYMENT`.
+The database is included; full instructions are under [Running it](#running-it).
+
+## <img src="https://user-images.githubusercontent.com/74038190/216122041-518ac897-8d92-4c6b-9b3f-ca01dcaf38ee.png" width="30" /> Screenshots
+
+| Home and journey planner | Route results with explanations |
+|:---:|:---:|
+| <img src="docs/screenshots/home.png" width="420" alt="Home page" /> | <img src="docs/screenshots/route-results.png" width="420" alt="Route results" /> |
+| **Station page** | **Line diagram** |
+| <img src="docs/screenshots/station.png" width="420" alt="Station page" /> | <img src="docs/screenshots/line.png" width="420" alt="Line page" /> |
+
+<div align="center">
+<img src="docs/screenshots/mobile.png" width="260" alt="Mobile layout" />
+<br/><sub>Responsive layout on a narrow screen</sub>
+</div>
+
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%" />
 
 ## Problem statement
 
@@ -18,7 +65,7 @@ route better. MetroPulse models the network as a weighted graph and lets fresh c
 change the route weights, while always telling the passenger how reliable that information is.
 More detail: [docs/problem-statement.md](docs/problem-statement.md).
 
-## Key features
+## <img src="https://user-images.githubusercontent.com/74038190/216120981-b9507c36-0e04-4469-8e27-c99271b45ba5.png" width="30" /> Key features
 
 | Area | What it does |
 |---|---|
@@ -189,7 +236,7 @@ while the less-crowded and fewer-transfer options both go north via Dahisar (Eas
 The network itself (lines, stations, connections) is loaded by the Flyway migration
 `V2__seed_network.sql`, separately from demo data. Sources: [docs/data-sources.md](docs/data-sources.md).
 
-## Tests
+## <img src="https://user-images.githubusercontent.com/74038190/216122028-c05b52fb-983e-4ee8-8811-6f30cd9ea5d5.png" width="30" /> Tests
 
 ```bash
 mvn test
@@ -233,3 +280,9 @@ so they need neither Docker nor a local install. The first run downloads the bin
 * Crowd data depends entirely on user reports; with none, crowding is shown as unknown.
 * Facility data is demonstration data until an administrator verifies it.
 * Only Lines 1, 2A and 7 are modelled.
+
+<div align="center">
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="100%" />
+
+<sub>Made by Maithili Pawar (D-248) and Maitri Borkar (D-215) · Full Stack Java Programming</sub>
+</div>
