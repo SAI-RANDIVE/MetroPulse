@@ -75,26 +75,43 @@ Full explanation: [docs/system-design.md](docs/system-design.md).
 
 * **JDK 21** and **Maven 3.9+** (`java -version`, `mvn -v`)
 * **A PostgreSQL server** (version 14 or newer). VS Code database extensions are only *clients*; they need a
-  server to connect to. If you do not have one, use option B below.
+  server to connect to. You only need one for the backup way below.
 
-### Option A: your own PostgreSQL server
+### Main way: one command, database included
 
-1. Install PostgreSQL (for example the Windows installer from postgresql.org) and remember the password you set
-   for the `postgres` user.
-2. Create the database once (from pgAdmin, psql or your VS Code database client, connected to the `postgres` database):
+```bash
+mvn spring-boot:test-run -Dspring-boot.run.main-class=com.metropulse.LocalDevApplication
+```
+
+This starts a real PostgreSQL 17 server from Maven-downloaded binaries (nothing to install, no Docker), keeps its
+data in `.localdb/` (git-ignored) and then starts MetroPulse. Open **http://localhost:8080**.
+The first start takes a minute or two while Maven downloads everything; later starts take about 15 seconds.
+
+* Stop it with **Ctrl+C** in the same terminal (this also stops the database cleanly).
+* Data survives restarts. Delete the `.localdb/` folder for a completely fresh database.
+* The database settings in `.env` are ignored in this mode; everything else (admin account, demo data, port) still applies.
+
+### Backup: your own PostgreSQL server
+
+Use this if the command above does not work, or when you want to see the tables in pgAdmin or a VS Code
+database client. VS Code database extensions are only *clients*, so a PostgreSQL server must be installed.
+
+1. Install PostgreSQL from postgresql.org. Set the `postgres` password (this project's `.env` expects `123456`)
+   and keep port 5432.
+2. Connect with your database client (127.0.0.1, 5432, user `postgres`, database `postgres`) and run once:
 
    ```sql
    CREATE DATABASE metropulse;
    ```
 
-3. Put your connection details in the root `.env` file (same folder as `pom.xml`):
+3. Check the connection details in the root `.env` file (same folder as `pom.xml`):
 
    ```dotenv
    DB_HOST=127.0.0.1
    DB_PORT=5432
    DB_NAME=metropulse
    DB_USERNAME=postgres
-   DB_PASSWORD=your-postgres-password
+   DB_PASSWORD=123456
    ```
 
 4. Start the application:
@@ -105,20 +122,10 @@ Full explanation: [docs/system-design.md](docs/system-design.md).
 
 Flyway creates all tables and loads the network on first start. Open **http://localhost:8080**.
 
-### Option B: no PostgreSQL installed (bundled database)
-
-```bash
-mvn spring-boot:test-run -Dspring-boot.run.main-class=com.metropulse.LocalDevApplication
-```
-
-This starts a real PostgreSQL 17 server from Maven-downloaded binaries (no installation, no Docker), stores its
-data in `.localdb/` (git-ignored) and then starts MetroPulse. Everything else still comes from `.env`.
-Stop it with **Ctrl+C**. Delete `.localdb/` for a fresh database.
-
 ### From an IDE
 
-Open the folder as a Maven project and run `com.metropulse.MetroPulseApplication` (option A) or
-`com.metropulse.LocalDevApplication` from `src/test/java` (option B). The working directory must be the project
+Open the folder as a Maven project and run `com.metropulse.MetroPulseApplication` (backup way) or
+`com.metropulse.LocalDevApplication` from `src/test/java` (main way). The working directory must be the project
 folder so that `.env` is found.
 
 ### Signing in
@@ -205,12 +212,13 @@ so they need neither Docker nor a local install. The first run downloads the bin
 | [docs/data-sources.md](docs/data-sources.md) | Official sources and data limitations |
 | [docs/test-report.md](docs/test-report.md) | Test scenarios and results |
 | [docs/project-report-outline.md](docs/project-report-outline.md) | Outline for the academic report |
+| [docs/report-prompt.md](docs/report-prompt.md) | Ready-to-use AI prompt for writing the project report with diagrams |
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| `Connection to 127.0.0.1:5432 refused` | No PostgreSQL server is running. Start it, or use option B |
+| `Connection to 127.0.0.1:5432 refused` | No PostgreSQL server is running. Start it, or use the main one-command way |
 | `password authentication failed for user "postgres"` | `DB_PASSWORD` in `.env` does not match your server |
 | `database "metropulse" does not exist` | Run `CREATE DATABASE metropulse;` (or set `DB_NAME=postgres`) |
 | `.env` values ignored | Start the app from the project folder; check the log line `Loaded N settings from ...\.env` |
