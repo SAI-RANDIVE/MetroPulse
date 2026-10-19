@@ -164,5 +164,5 @@ Write this chapter ONLY from the details below. If something is missing, leave a
    `Win + Shift + S`. Good pages to capture: `/`, `/routes?from=26&to=33&preference=LESS_CROWDED`, `/stations`,
    `/stations/4`, `/lines/2A`, `/alerts`, `/reports/new`, `/admin`, `/admin/reports`, `/admin/alerts`.
 3. **Test output screenshot:** run `mvn test` and capture the `Tests run: 84, Failures: 0` line.
-4. Ready-made source material in this folder: `docs/algorithm.md`, `docs/database-design.md`,
-   `docs/system-design.md`, `docs/test-report.md`, `docs/project-report-outline.md`.
+4. More source material: the project `README.md` (features, architecture, data sources) and the code itself,
+   e.g. `src/main/java/com/metropulse/service/routing/DijkstraRouter.java`.

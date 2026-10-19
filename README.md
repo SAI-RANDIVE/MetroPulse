@@ -36,9 +36,15 @@ crowd reports and administrator-verified service alerts. It is built with **Java
 
 ## <img src="https://user-images.githubusercontent.com/74038190/216122069-5b8169d7-1d8e-4a13-b245-a8e4176c99f8.png" width="30" /> Quick start
 
+Double-click **`run.cmd`**, or in a terminal:
+
 ```bash
+cd E:\Maithili\MetroPulse
 mvn spring-boot:test-run -Dspring-boot.run.main-class=com.metropulse.LocalDevApplication
 ```
+
+> Maven commands must run inside the `MetroPulse` folder (where `pom.xml` is). Running them one folder up gives
+> `No plugin found for prefix 'spring-boot'`.
 
 Open **http://localhost:8080** and sign in as `admin@metropulse.local` / `CHANGE_ME_BEFORE_DEPLOYMENT`.
 The database is included; full instructions are under [Running it](#running-it).
@@ -63,7 +69,6 @@ The database is included; full instructions are under [Running it](#running-it).
 Commuters can see where the metro goes, but not how busy it is right now or whether a disruption makes another
 route better. MetroPulse models the network as a weighted graph and lets fresh crowd reports and verified alerts
 change the route weights, while always telling the passenger how reliable that information is.
-More detail: [docs/problem-statement.md](docs/problem-statement.md).
 
 ## <img src="https://user-images.githubusercontent.com/74038190/216120981-b9507c36-0e04-4469-8e27-c99271b45ba5.png" width="30" /> Key features
 
@@ -112,7 +117,6 @@ src/main/java/com/metropulse
 └── validation    custom @DifferentStations constraint
 ```
 
-Full explanation: [docs/system-design.md](docs/system-design.md).
 
 ---
 
@@ -234,7 +238,7 @@ rows and reseeds them; real reports, alerts and facilities are never touched. Tr
 while the less-crowded and fewer-transfer options both go north via Dahisar (East).
 
 The network itself (lines, stations, connections) is loaded by the Flyway migration
-`V2__seed_network.sql`, separately from demo data. Sources: [docs/data-sources.md](docs/data-sources.md).
+`V2__seed_network.sql`, separately from demo data (see [Data sources](#data-sources)).
 
 ## <img src="https://user-images.githubusercontent.com/74038190/216122028-c05b52fb-983e-4ee8-8811-6f30cd9ea5d5.png" width="30" /> Tests
 
@@ -243,23 +247,25 @@ mvn test
 ```
 
 Integration tests run against a **real PostgreSQL** server started automatically from the zonky embedded binaries,
-so they need neither Docker nor a local install. The first run downloads the binaries. See
-[docs/test-report.md](docs/test-report.md). To build the runnable jar: `mvn package`, then
+so they need neither Docker nor a local install. The first run downloads the binaries.
+Result on 19 Oct 2026: `Tests run: 84, Failures: 0, Errors: 0`. To build the runnable jar: `mvn package`, then
 `java -jar target/metropulse-1.0.0.jar` (run from the project folder so `.env` is found).
 
-## Documentation
+## Data sources
 
-| Document | Contents |
-|---|---|
-| [docs/problem-statement.md](docs/problem-statement.md) | Problem, users, scope, research question |
-| [docs/system-design.md](docs/system-design.md) | Layers, components, request flow |
-| [docs/algorithm.md](docs/algorithm.md) | Graph model, Dijkstra, cost model, complexity |
-| [docs/database-design.md](docs/database-design.md) | ER diagram, tables, constraints, indexes |
-| [docs/api-reference.md](docs/api-reference.md) | Endpoints, examples, errors |
-| [docs/data-sources.md](docs/data-sources.md) | Official sources and data limitations |
-| [docs/test-report.md](docs/test-report.md) | Test scenarios and results |
-| [docs/project-report-outline.md](docs/project-report-outline.md) | Outline for the academic report |
-| [docs/report-prompt.md](docs/report-prompt.md) | Ready-to-use AI prompt for writing the project report with diagrams |
+Station names and order were checked on 19 October 2026 against the operators' websites:
+
+* MMMOCL (Lines 2A and 7): https://www.mmmocl.co.in/project_brief, https://www.mmmocl.co.in/network_under_operation
+  and https://www.mmmocl.co.in/fare_table
+* Mumbai Metro One (Line 1): https://www.reliancemumbaimetro.com/ticket-fares.aspx
+
+Dahisar (East) is modelled on both Line 2A and Line 7, because the operator lists it at the end of Line 7.
+D N Nagar ↔ Andheri (West) and Western Express Highway ↔ Gundavali are walking interchanges between separate stations.
+Travel times (2 min per stop, 4–8 min per interchange) are estimates. Coordinates are not stored, and areas are approximate.
+
+## Report
+
+[docs/report-prompt.md](docs/report-prompt.md) is a ready-to-use prompt for writing the project report with diagrams.
 
 ## Troubleshooting
 
@@ -271,6 +277,7 @@ so they need neither Docker nor a local install. The first run downloads the bin
 | `.env` values ignored | Start the app from the project folder; check the log line `Loaded N settings from ...\.env` |
 | `Unsafe production configuration` at startup | Expected with placeholder passwords when `APP_ENV=production` |
 | Port 8080 in use | Set `APP_PORT=8081` in `.env` |
+| `No plugin found for prefix 'spring-boot'` | You are in the wrong folder: `cd` into `MetroPulse` (where `pom.xml` is), or use `run.cmd` |
 | Admin login fails after changing `ADMIN_PASSWORD` | The account already existed; the old password still applies (by design) |
 
 ## Limitations
